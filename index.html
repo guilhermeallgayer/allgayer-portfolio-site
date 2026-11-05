@@ -1,0 +1,2137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Allgayer Financial Models</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive financial models by Guilherme Allgayer: real estate development feasibility, acquisition underwriting, 3-statement DCF valuation and Python FP&A automation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a drawing set. Each case study is a "sheet" with a code, a brief, a live model and a title block. */
+/* Brand: Guilherme Allgayer, "Lima no escuro" guide v1.0 (marca-guilherme-allgayer-opcao-P.md). */
+:root {
+  --paper: #F2F3F0;      /* ice: page background, light sections */
+  --sheet: #FFFFFF;      /* card + chart surface, light sections */
+  --ink: #151715;        /* charcoal: headings, primary text, numbers */
+  --ink-2: #3F443E;      /* body text, secondary */
+  --muted: #5C615A;      /* labels, captions */
+  --rule: #E3E5E0;       /* line, light */
+  --grid: #E3E5E0;
+  --axis: #5C615A;
+  --accent: #5A7300;     /* oliva-lima: links and controls on light */
+  --wash: color-mix(in srgb, #D1FF42 14%, #F2F3F0);
+  --s1: #D1FF42;         /* chart series: focus (charts always sit on a dark panel) */
+  --s2: #B8BCB5;         /* chart series: secondary */
+  --s3: #FFFFFF;         /* chart series: total / emphasis */
+  --div-pos: #D1FF42;    /* diverging poles */
+  --div-neg: #B3392B;
+  --div-mid: #FFFFFF;
+  --good: #D1FF42; --warning: #B26B00; --critical: #B3392B;
+  --color-charcoal: #151715; --color-panel: #1E211E; --color-panel-2: #262926;
+  --color-line-dark: #2A2D2A; --color-line-dark-strong: #3A3D3A;
+  --color-ice: #F2F3F0; --color-white: #FFFFFF; --color-lime: #D1FF42;
+  --color-text-dark-2: #B8BCB5; --color-text-dark-3: #8A8F88;
+  --mark-ring: inset 0 0 0 1.5px var(--ink);
+  --f-display: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 1rem; --step-1: 1.1875rem; --step-2: 1.5rem; --step-3: 2.125rem; --step-4: clamp(2.125rem, 4.6vw, 3.25rem);
+  --radius: 10px;
+  --radius-card: 16px;
+  --radius-button: 10px;
+  --radius-tag: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151715; --sheet: #1E211E; --ink: #FFFFFF; --ink-2: #B8BCB5; --muted: #8A8F88;
+    --rule: #2A2D2A; --grid: #2A2D2A; --axis: #8A8F88; --accent: #D1FF42;
+    --wash: color-mix(in srgb, #D1FF42 10%, #1E211E);
+    --div-neg: #FF8A7A; --div-mid: #1E211E; --warning: #F2B84B; --critical: #FF8A7A;
+    --mark-ring: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151715; --sheet: #1E211E; --ink: #FFFFFF; --ink-2: #B8BCB5; --muted: #8A8F88;
+  --rule: #2A2D2A; --grid: #2A2D2A; --axis: #8A8F88; --accent: #D1FF42;
+  --wash: color-mix(in srgb, #D1FF42 10%, #1E211E);
+  --div-neg: #FF8A7A; --div-mid: #1E211E; --warning: #F2B84B; --critical: #FF8A7A;
+  --mark-ring: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: var(--step-0); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.1; letter-spacing: -0.03em; }
+p { margin: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-mono); font-weight: 500; font-size: var(--step--1); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-2); }
+
+/* Tag (brand label chip) */
+.tag { display: inline-flex; align-items: center; font-family: var(--f-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: var(--radius-tag); white-space: nowrap; }
+.tag--demo { background: var(--rule); color: var(--ink); }
+.tag--client { background: var(--color-charcoal); color: var(--color-lime); }
+
+/* Top bar */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+.topbar .wrap { display: flex; align-items: center; gap: 24px; padding-block: 12px; }
+.brand { display: inline-flex; align-items: center; gap: 0.4em; font-size: 20px; text-decoration: none; white-space: nowrap; }
+.brand__name { font-family: var(--f-display); font-weight: 600; letter-spacing: -0.035em; line-height: 1; color: var(--ink); }
+.brand__mark { width: 0.34em; height: 0.34em; border-radius: 0.08em; background: var(--color-lime); box-shadow: var(--mark-ring); flex: none; }
+.brand__tag { font-family: var(--f-mono); color: var(--muted); font-weight: 400; font-size: 0.6rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.nav { display: flex; gap: 18px; margin-left: auto; flex-wrap: wrap; }
+.nav a { color: var(--ink-2); text-decoration: none; font-size: 0.875rem; font-weight: 500; }
+.nav a:hover { color: var(--accent); }
+.nav a .code { font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); margin-right: 4px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; background: var(--ink); color: var(--paper); font-family: var(--f-mono); font-size: 0.8125rem; font-weight: 400; letter-spacing: 0.02em; text-transform: uppercase; min-height: 52px; padding: 0 22px; border-radius: var(--radius-button); text-decoration: none; white-space: nowrap; border: 0; cursor: pointer; }
+.btn:has(.btn__icon) { padding: 4px 22px 4px 4px; }
+.btn__icon { width: 36px; height: 36px; border-radius: 7px; background: var(--color-lime); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.btn__icon svg { display: block; }
+.btn:hover { filter: brightness(0.96); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.topbar .btn { min-height: 44px; padding: 0 18px; font-size: 0.75rem; }
+@media (max-width: 860px) { .nav { display: none; } .topbar .btn { margin-left: auto; } }
+@media (max-width: 480px) { .brand__tag { display: none; } }
+
+/* Disclaimer bar */
+.disclaimer-bar { background: var(--wash); border-bottom: 1px solid var(--rule); }
+.disclaimer-bar .wrap { padding-block: 10px; font-size: 0.8125rem; line-height: 1.45; color: var(--ink-2); }
+.disclaimer-bar strong { color: var(--ink); }
+
+/* Hero */
+.hero { padding-block: 64px 56px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: end; }
+.hero h1 { font-size: var(--step-4); font-weight: 600; letter-spacing: -0.04em; margin-top: 14px; max-width: 21ch; }
+.hero .lead { margin-top: 20px; font-size: var(--step-1); color: var(--ink-2); max-width: 54ch; line-height: 1.5; }
+.hero .actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 44px; border-top: 1px solid var(--ink); }
+.fact { padding: 14px 16px 0 0; }
+.fact + .fact { padding-left: 16px; border-left: 1px solid var(--rule); }
+.fact b { display: block; font-family: var(--f-display); font-size: var(--step-3); font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; }
+.fact span { color: var(--ink-2); font-size: 0.875rem; }
+
+/* Title block (the sheet index) */
+.titleblock { background: var(--sheet); border: 1.5px solid var(--ink); font-size: 0.875rem; }
+.titleblock .tb-head { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1.5px solid var(--ink); }
+.titleblock .tb-head strong { font-family: var(--f-mono); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.75rem; }
+.titleblock table { width: 100%; border-collapse: collapse; }
+.titleblock th { text-align: left; font-family: var(--f-mono); font-weight: 500; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 8px 14px; border-bottom: 1px solid var(--rule); }
+.titleblock td { padding: 11px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.titleblock tr:last-child td { border-bottom: 0; }
+.titleblock td a { color: var(--ink); text-decoration: none; font-weight: 600; }
+.titleblock td a:hover { color: var(--accent); }
+.titleblock .sheet-no { font-family: var(--f-mono); font-weight: 500; white-space: nowrap; }
+.titleblock .tools { color: var(--muted); font-size: 0.8125rem; display: block; font-weight: 400; }
+.titleblock .tb-foot { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--ink); }
+.titleblock .tb-foot div { padding: 8px 14px; font-size: 0.75rem; color: var(--ink-2); }
+.titleblock .tb-foot div + div { border-left: 1px solid var(--rule); }
+.titleblock .tb-foot em { display: block; font-style: normal; font-family: var(--f-mono); font-size: 0.625rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; } .hero { padding-block: 40px; } }
+@media (max-width: 520px) { .facts { grid-template-columns: minmax(0, 1fr); } .fact + .fact { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); padding-top: 12px; margin-top: 12px; } .fact { padding-top: 12px; } }
+
+/* Case study sheets */
+.case { padding-block: 56px; border-top: 1px solid var(--rule); }
+.case-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px 48px; align-items: start; }
+.sheet-tag { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sheet-tag .code { font-family: var(--f-mono); font-size: 0.8125rem; font-weight: 500; padding: 2px 7px; border: 1.5px solid var(--ink); }
+.case h2 { font-size: var(--step-3); font-weight: 600; letter-spacing: -0.035em; margin-top: 14px; }
+.brief { color: var(--ink-2); font-size: 1.0625rem; max-width: 60ch; }
+.brief + .brief { margin-top: 12px; }
+.answers { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.answers li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; color: var(--ink); }
+.answers li::before { content: ""; width: 8px; height: 8px; margin-top: 8px; border-radius: 2px; background: var(--accent); }
+.answers-label { margin-bottom: 10px; }
+@media (max-width: 860px) { .case-head { grid-template-columns: minmax(0, 1fr); } }
+
+.model { margin-top: 32px; display: grid; grid-template-columns: 300px minmax(0, 1fr); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius-card); overflow: hidden; }
+.inputs { padding: 20px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 18px; }
+.inputs h3, .outputs h3 { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.group { display: flex; flex-direction: column; gap: 14px; }
+.field label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.875rem; color: var(--ink-2); }
+.field output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--ink); font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
+.field input[type=range] { width: 100%; margin: 8px 0 0; accent-color: var(--accent); }
+.reset { align-self: flex-start; background: none; border: 1px solid var(--rule); color: var(--ink-2); border-radius: var(--radius-button); padding: 8px 12px; font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.02em; text-transform: uppercase; cursor: pointer; min-height: 36px; }
+.reset:hover { color: var(--ink); border-color: var(--muted); }
+.outputs { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+@media (max-width: 900px) { .model { grid-template-columns: minmax(0, 1fr); } .inputs { border-right: 0; border-bottom: 1px solid var(--rule); } .outputs { padding: 20px 16px; } }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: var(--radius-button); overflow: hidden; }
+.kpi { background: var(--sheet); padding: 12px 14px; min-width: 0; }
+.kpi .k-label { font-size: 0.8125rem; color: var(--ink-2); }
+.kpi .k-value { font-family: var(--f-display); font-weight: 600; letter-spacing: -0.025em; font-size: 1.5rem; line-height: 1.2; margin-top: 2px; white-space: nowrap; }
+.kpi .k-note { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.kpi .k-note.bad { color: var(--critical); }
+@media (max-width: 1040px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.verdict { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--radius-card); background: var(--wash); font-size: 0.9375rem; }
+.verdict .pill { flex: none; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); white-space: nowrap; }
+.pill i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.pill.good i { background: var(--good); } .pill.warning i { background: var(--warning); } .pill.critical i { background: var(--critical); } .pill.info i { background: var(--muted); }
+
+.chart-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--color-panel); border-radius: var(--radius-card); padding: 20px;
+  --ink: var(--color-white); --ink-2: var(--color-text-dark-2); --muted: var(--color-text-dark-3);
+  --rule: var(--color-line-dark); --grid: var(--color-line-dark); --axis: var(--color-text-dark-3); --sheet: var(--color-panel); --wash: var(--color-panel-2); }
+.chart-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.chart-title strong { font-weight: 600; font-size: 0.9375rem; color: var(--ink); }
+.chart-title span { color: var(--muted); font-size: 0.8125rem; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 0.75rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.legend i.line { height: 2px; border-radius: 1px; width: 16px; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--color-panel-2); border: 1px solid var(--rule); box-shadow: 0 4px 16px rgba(0,0,0,0.4); border-radius: var(--radius-button); padding: 8px 10px; font-size: 0.8125rem; min-width: 150px; z-index: 3; color: var(--ink); }
+.tip b { display: block; font-weight: 600; margin-bottom: 4px; }
+.tip div { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); }
+.tip div span:last-child { font-family: var(--f-mono); color: var(--ink); }
+.tip i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 1040px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.grid { border-collapse: collapse; width: 100%; font-size: 0.8125rem; }
+table.grid th, table.grid td { padding: 6px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+table.grid th:first-child, table.grid td:first-child { text-align: left; font-family: var(--f-body); position: sticky; left: 0; background: var(--sheet); }
+table.grid thead th { color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--axis); }
+table.grid tr.total td { font-weight: 600; border-top: 1px solid var(--axis); }
+table.grid tr.sub td:first-child { padding-left: 20px; color: var(--ink-2); }
+table.grid td.neg { color: var(--ink-2); }
+table.sens { border-collapse: separate; border-spacing: 2px; font-size: 0.8125rem; }
+table.sens th, table.sens td { padding: 7px 10px; text-align: center; font-family: var(--f-mono); font-variant-numeric: tabular-nums; border-radius: 3px; white-space: nowrap; }
+table.sens thead th, table.sens tbody th { color: var(--muted); font-weight: 500; }
+table.sens td { color: var(--ink); }
+table.sens td.base { outline: 2px solid var(--ink); outline-offset: -2px; font-weight: 600; }
+.sens-caption { font-size: 0.8125rem; color: var(--muted); margin-top: 6px; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; font: inherit; font-size: 0.875rem; color: var(--ink-2); cursor: pointer; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.check-ok { color: var(--ink); font-weight: 600; }
+
+.method { margin-top: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.method div { border-top: 1.5px solid var(--ink); padding-top: 12px; }
+.method h4 { margin: 0 0 6px; font-family: var(--f-display); font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; }
+.method p { color: var(--ink-2); font-size: 0.9375rem; }
+@media (max-width: 860px) { .method { grid-template-columns: minmax(0, 1fr); } }
+
+.case-foot { margin-top: 28px; display: grid; grid-template-columns: auto auto 1fr auto; border: 1px solid var(--ink); font-size: 0.75rem; background: var(--sheet); }
+.case-foot div { padding: 6px 12px; color: var(--ink-2); min-width: 0; }
+.case-foot div + div { border-left: 1px solid var(--rule); }
+.case-foot em { font-style: normal; display: block; font-family: var(--f-mono); font-size: 0.625rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 640px) { .case-foot { grid-template-columns: 1fr 1fr; } .case-foot div:nth-child(3) { border-left: 0; } .case-foot div:nth-child(n+3) { border-top: 1px solid var(--rule); } }
+
+/* Python case */
+.pipeline { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; counter-reset: step; }
+.pipeline div { padding: 10px 12px; border: 1px solid var(--rule); background: var(--sheet); font-size: 0.8125rem; color: var(--ink-2); position: relative; }
+.pipeline div + div { border-left: 0; }
+.pipeline b { display: block; color: var(--ink); font-size: 0.875rem; margin-bottom: 2px; }
+.pipeline b::before { counter-increment: step; content: counter(step) " "; font-family: var(--f-mono); color: var(--muted); font-weight: 500; }
+@media (max-width: 900px) { .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pipeline div + div { border-left: 1px solid var(--rule); } .pipeline div { margin: 0 -1px -1px 0; } }
+.code-block { background: var(--color-panel); border-radius: var(--radius-card);
+  --ink: var(--color-white); --ink-2: var(--color-text-dark-2); --muted: var(--color-text-dark-3); --rule: var(--color-line-dark); --paper: var(--color-panel); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--rule); font-size: 0.8125rem; color: var(--ink-2); }
+.code-head .mono { color: var(--ink); }
+pre.code { margin: 0; padding: 14px 16px; max-height: 460px; overflow: auto; font-family: var(--f-mono); font-size: 0.78rem; line-height: 1.6; color: var(--ink); tab-size: 4; }
+pre.code .c { color: var(--muted); font-style: italic; }
+pre.code .s { color: var(--ink-2); }
+pre.code .k { color: var(--color-lime); font-weight: 500; }
+.flags { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.flags li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: start; font-size: 0.9rem; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--radius-button); }
+.hbars { display: grid; gap: 6px; }
+.hbar { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; font-size: 0.8125rem; }
+.hbar .name { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar .track { display: flex; align-items: center; gap: 6px; }
+.hbar .bar { height: 14px; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
+.hbar .bar.slow { background: var(--critical); }
+.hbar .v { font-family: var(--f-mono); font-size: 0.75rem; color: var(--ink); }
+.run-log { font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink-2); display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* How I work + About + contact */
+.offer { padding-block: 64px; border-top: 1px solid var(--rule); }
+.offer h2 { font-size: var(--step-3); letter-spacing: -0.035em; }
+.about { padding-block: 64px; border-top: 1px solid var(--rule); }
+.about-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; margin-top: 24px; }
+.about h2 { font-size: var(--step-3); letter-spacing: -0.035em; }
+.about p { color: var(--ink-2); max-width: 62ch; }
+.about p + p { margin-top: 14px; }
+.cv { display: grid; gap: 0; }
+.cv div { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 0.9375rem; }
+.cv div:first-child { border-top: 1.5px solid var(--ink); }
+.cv dt { color: var(--muted); font-family: var(--f-mono); font-size: 0.8125rem; }
+.cv dd { margin: 0; }
+.cv dd span { display: block; color: var(--ink-2); font-size: 0.875rem; }
+.contact { margin-top: 48px; padding: 28px; background: var(--sheet); border: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.contact h3 { font-size: var(--step-2); letter-spacing: -0.02em; }
+.contact p { color: var(--ink-2); margin-top: 6px; }
+@media (max-width: 860px) { .about-grid { grid-template-columns: minmax(0, 1fr); } .cv div { grid-template-columns: 90px 1fr; } }
+footer { padding-block: 28px 48px; color: var(--muted); font-size: 0.8125rem; }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Guilherme Allgayer, home">
+      <span class="brand__name">Guilherme Allgayer</span>
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__tag">Financial models</span>
+    </a>
+    <nav class="nav" aria-label="Case studies">
+      <a href="#feasibility"><span class="code">FS-01</span>Feasibility</a>
+      <a href="#acquisition"><span class="code">AQ-02</span>Acquisition</a>
+      <a href="#valuation"><span class="code">VA-03</span>Valuation</a>
+      <a href="#automation"><span class="code">PY-04</span>Automation</a>
+      <a href="#how-i-work">How I work</a>
+      <a href="#about">About</a>
+    </nav>
+    <a class="btn" href="https://www.upwork.com/freelancers/~019fb11a8bfae1aaf4" target="_blank" rel="noopener">Hire me on Upwork</a>
+  </div>
+</header>
+
+<div class="disclaimer-bar" role="note">
+  <div class="wrap"><strong>Demonstration only.</strong> All companies and figures in these case studies are fictional, built to show how I model. They are not investment advice.</div>
+</div>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Real estate financial modeling</p>
+      <h1>Financial models for real estate developers and investors</h1>
+      <p class="lead">I'm Guilherme Allgayer, an architect who has run corporate finance and FP&amp;A at a real estate developer in Brazil for the past 10 years. The case studies below use fictional numbers, but the logic is how I model these decisions for real. Change any input and the page recalculates, so you can test the reasoning yourself.</p>
+      <div class="actions">
+        <a class="btn" href="#feasibility"><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#151715" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Open the first model</a>
+        <a class="btn ghost" href="https://www.upwork.com/freelancers/~019fb11a8bfae1aaf4" target="_blank" rel="noopener">View Upwork profile</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>10 yrs</b><span>Corporate finance &amp; FP&amp;A at a real estate developer</span></div>
+        <div class="fact"><b>US$50M+</b><span>Gross development value managed across projects</span></div>
+        <div class="fact"><b>~US$4M</b><span>Project financing structured</span></div>
+      </div>
+    </div>
+    <aside class="titleblock" aria-label="Sheet index">
+      <div class="tb-head"><strong>Sheet index</strong><span class="mono">Set 2026 · Rev A</span></div>
+      <table>
+        <thead><tr><th>Sheet</th><th>Model</th></tr></thead>
+        <tbody>
+          <tr><td class="sheet-no">FS-01</td><td><a href="#feasibility">Development feasibility</a><span class="tools">Monthly cash flow · construction loan · equity IRR</span></td></tr>
+          <tr><td class="sheet-no">AQ-02</td><td><a href="#acquisition">Acquisition underwriting</a><span class="tools">Debt sizing by LTV and DSCR · maximum bid</span></td></tr>
+          <tr><td class="sheet-no">VA-03</td><td><a href="#valuation">3-statement model &amp; DCF</a><span class="tools">Linked IS, BS, CF · WACC × growth</span></td></tr>
+          <tr><td class="sheet-no">PY-04</td><td><a href="#automation">13-week cash flow in Python</a><span class="tools">pandas pipeline from raw ERP exports</span></td></tr>
+        </tbody>
+      </table>
+      <div class="tb-foot">
+        <div><em>Drawn by</em>Guilherme Allgayer</div>
+        <div><em>Data</em>Fictional</div>
+        <div><em>Tools</em>Excel · Python</div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- FS-01 ------------------------------------------------------------- -->
+<section class="case" id="feasibility">
+  <div class="wrap">
+    <div class="case-head">
+      <div>
+        <div class="sheet-tag"><span class="code">FS-01</span><span class="eyebrow">Development feasibility</span><span class="tag tag--demo">Demo · fictional company</span></div>
+        <h2>Mirante Residences: should we buy the land?</h2>
+        <p class="brief" style="margin-top:14px">A developer has an option on a site zoned for a 72-unit mid-rise with 5,400 m² of sellable area (about 58,100 sq ft). Before paying the deposit, the partners need to know the return on their equity, how much cash they must put in and when they get it back.</p>
+      </div>
+      <div>
+        <p class="eyebrow answers-label">What the model answers</p>
+        <ul class="answers">
+          <li>Profit, margin on GDV and profit on cost after financing</li>
+          <li>Peak equity the partners must fund, and in which month</li>
+          <li>Equity IRR against an 18% hurdle, with and without debt</li>
+          <li>How far sale price and construction cost can move before the deal stops working</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="model">
+      <form class="inputs" id="fs-inputs" onsubmit="return false">
+        <h3>Assumptions</h3>
+        <div class="group" data-group="fs-a"></div>
+        <h3>Timeline &amp; sales</h3>
+        <div class="group" data-group="fs-b"></div>
+        <h3>Financing</h3>
+        <div class="group" data-group="fs-c"></div>
+        <button type="button" class="reset" data-reset="fs">Reset to base case</button>
+        <button type="button" class="reset" id="fs-download">Export these results (.xlsx)</button>
+      </form>
+      <div class="outputs">
+        <div class="kpis" id="fs-kpis"></div>
+        <div class="verdict" id="fs-verdict"></div>
+        <div class="chart-block">
+          <div class="chart-title"><strong>Cumulative equity position</strong><span>US$, by month. The low point is the peak equity the partners fund.</span></div>
+          <div class="chart" id="fs-chart-equity"></div>
+        </div>
+        <div class="chart-block">
+          <div class="chart-title"><strong>Cumulative costs and buyer receipts</strong><span>US$. Costs follow the construction S-curve; most receipts arrive at handover.</span></div>
+          <div class="legend"><span><i class="line" style="background:var(--s2)"></i>Development costs</span><span><i class="line" style="background:var(--s1)"></i>Buyer receipts</span></div>
+          <div class="chart" id="fs-chart-flows"></div>
+        </div>
+        <div class="two-col">
+          <div>
+            <div class="chart-title"><strong>Equity IRR sensitivity</strong></div>
+            <div class="scroll-x"><table class="sens" id="fs-sens"></table></div>
+            <p class="sens-caption">Rows: sale price vs base. Columns: hard cost vs base. Lime cells clear the 18% hurdle; red cells fall short.</p>
+          </div>
+          <div>
+            <div class="chart-title"><strong>Development budget</strong></div>
+            <div class="scroll-x"><table class="grid" id="fs-uses"></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="method">
+      <div><h4>Monthly, not annual</h4><p>Land, soft costs, a sine-shaped construction S-curve and buyer payments all land in the month they happen. Annual models hide the peak equity, and the peak is what the partners are actually signing up for.</p></div>
+      <div><h4>Payment plans drive cash</h4><p>Buyers pay a deposit at signing, monthly installments until handover and the balance at completion. Units sold after completion pay in full on sale. This is how off-plan sales work in Brazil and most of Latin America.</p></div>
+      <div><h4>Debt with real mechanics</h4><p>The construction loan funds a share of each hard-cost draw, interest is capitalized monthly and every dollar received after completion sweeps to repay it before equity sees a distribution.</p></div>
+    </div>
+    <div class="case-foot">
+      <div><em>Sheet</em><span class="mono">FS-01</span></div>
+      <div><em>Scale</em>Monthly, 36+ periods</div>
+      <div><em>Project</em>Mirante Residences (fictional)</div>
+      <div><em>Built in</em>Excel · rebuilt in JS</div>
+    </div>
+  </div>
+</section>
+
+<!-- AQ-02 ------------------------------------------------------------- -->
+<section class="case" id="acquisition">
+  <div class="wrap">
+    <div class="case-head">
+      <div>
+        <div class="sheet-tag"><span class="code">AQ-02</span><span class="eyebrow">Acquisition underwriting</span><span class="tag tag--demo">Demo · fictional company</span></div>
+        <h2>Linden Court: what is the most we should pay?</h2>
+        <p class="brief" style="margin-top:14px">A 24-unit apartment building is listed at US$4.0M. The investor will finance it with a bank loan, hold for five years and sell. The question is the bid, not just the IRR at the asking price.</p>
+      </div>
+      <div>
+        <p class="eyebrow answers-label">What the model answers</p>
+        <ul class="answers">
+          <li>Loan amount sized by whichever binds first: loan-to-value or the lender's minimum DSCR</li>
+          <li>Levered and unlevered IRR, equity multiple and year-1 cash-on-cash</li>
+          <li>The maximum purchase price that still clears the investor's required return</li>
+          <li>Exit value on forward NOI, for any hold period from 3 to 10 years</li>
+        </ul>
+      </div>
+    </div>
+    <div class="model">
+      <form class="inputs" onsubmit="return false">
+        <h3>Property</h3>
+        <div class="group" data-group="aq-a"></div>
+        <h3>Debt</h3>
+        <div class="group" data-group="aq-b"></div>
+        <h3>Exit &amp; hurdle</h3>
+        <div class="group" data-group="aq-c"></div>
+        <button type="button" class="reset" data-reset="aq">Reset to base case</button>
+        <button type="button" class="reset" id="aq-download">Export these results (.xlsx)</button>
+      </form>
+      <div class="outputs">
+        <div class="kpis" id="aq-kpis"></div>
+        <div class="verdict" id="aq-verdict"></div>
+        <div class="chart-block">
+          <div class="chart-title"><strong>Cash flow to equity</strong><span>US$, by year</span></div>
+          <div class="legend"><span><i style="background:var(--s2)"></i>Equity invested</span><span><i style="background:var(--s1)"></i>Cash flow after debt service</span><span><i style="background:var(--s3)"></i>Net sale proceeds</span></div>
+          <div class="chart" id="aq-chart"></div>
+        </div>
+        <div>
+          <div class="chart-title"><strong>Operating pro forma</strong><span id="aq-debt-note"></span></div>
+          <div class="scroll-x"><table class="grid" id="aq-table"></table></div>
+        </div>
+      </div>
+    </div>
+    <div class="method">
+      <div><h4>Debt sized like a lender would</h4><p>The loan is the lower of max LTV on the purchase price and the amount year-1 NOI can carry at the minimum DSCR. The model tells you which test binds.</p></div>
+      <div><h4>Exit on forward NOI</h4><p>The sale price capitalizes the NOI of the year after the sale, net of selling costs and the remaining loan balance from a monthly amortization schedule.</p></div>
+      <div><h4>Hurdle you can trace</h4><p>The required return is built from a risk-free rate, beta and equity risk premium plus a property-specific premium, and the model solves for the price where levered IRR equals it.</p></div>
+    </div>
+    <div class="case-foot">
+      <div><em>Sheet</em><span class="mono">AQ-02</span></div>
+      <div><em>Scale</em>Annual, 3–10 years</div>
+      <div><em>Project</em>Linden Court (fictional)</div>
+      <div><em>Built in</em>Excel · rebuilt in JS</div>
+    </div>
+  </div>
+</section>
+
+<!-- VA-03 ------------------------------------------------------------- -->
+<section class="case" id="valuation">
+  <div class="wrap">
+    <div class="case-head">
+      <div>
+        <div class="sheet-tag"><span class="code">VA-03</span><span class="eyebrow">3-statement model &amp; DCF</span><span class="tag tag--demo">Demo · fictional company</span></div>
+        <h2>Northfield Packaging: what is the business worth?</h2>
+        <p class="brief" style="margin-top:14px">The owners of a US$42M-revenue packaging manufacturer are talking to a buyer. They need a five-year forecast the buyer's analysts can audit and a valuation range they can defend.</p>
+      </div>
+      <div>
+        <p class="eyebrow answers-label">What the model answers</p>
+        <ul class="answers">
+          <li>Income statement, balance sheet and cash flow statement, linked so the balance sheet balances every year</li>
+          <li>Unlevered free cash flow, enterprise value and equity value</li>
+          <li>Implied EV/EBITDA, as a sanity check against market multiples</li>
+          <li>How much of the value sits in the terminal value</li>
+        </ul>
+      </div>
+    </div>
+    <div class="model">
+      <form class="inputs" onsubmit="return false">
+        <h3>Operations</h3>
+        <div class="group" data-group="va-a"></div>
+        <h3>Working capital</h3>
+        <div class="group" data-group="va-b"></div>
+        <h3>Valuation</h3>
+        <div class="group" data-group="va-c"></div>
+        <button type="button" class="reset" data-reset="va">Reset to base case</button>
+        <button type="button" class="reset" id="va-download">Export these results (.xlsx)</button>
+      </form>
+      <div class="outputs">
+        <div class="kpis" id="va-kpis"></div>
+        <div class="chart-block">
+          <div class="chart-title"><strong>From free cash flow to equity value</strong><span>US$</span></div>
+          <div class="chart" id="va-bridge"></div>
+        </div>
+        <div>
+          <div class="tabs" role="tablist" id="va-tabs">
+            <button role="tab" aria-selected="true" data-tab="is">Income statement</button>
+            <button role="tab" aria-selected="false" data-tab="bs">Balance sheet</button>
+            <button role="tab" aria-selected="false" data-tab="cf">Cash flow</button>
+            <button role="tab" aria-selected="false" data-tab="dcf">DCF</button>
+          </div>
+          <div class="scroll-x"><table class="grid" id="va-table"></table></div>
+        </div>
+        <div>
+          <div class="chart-title"><strong>Equity value sensitivity</strong><span>US$M</span></div>
+          <div class="scroll-x"><table class="sens" id="va-sens"></table></div>
+          <p class="sens-caption">Rows: WACC. Columns: terminal growth. Outlined cell is the base case.</p>
+        </div>
+      </div>
+    </div>
+    <div class="method">
+      <div><h4>Three statements, one engine</h4><p>Working capital runs on days (DSO, DIO, DPO), PP&amp;E rolls forward with capex and depreciation, and cash is the plug from the cash flow statement. The balance check row has to read zero, and it does.</p></div>
+      <div><h4>Valuation from the same numbers</h4><p>Free cash flow comes straight from the projected statements: EBIT after tax, plus D&amp;A, minus capex and the change in working capital. Nothing is typed in twice.</p></div>
+      <div><h4>Built to be challenged</h4><p>The implied multiple and the terminal value share sit next to the answer, because those are the first two things a buyer's analyst will question.</p></div>
+    </div>
+    <div class="case-foot">
+      <div><em>Sheet</em><span class="mono">VA-03</span></div>
+      <div><em>Scale</em>Annual, 2025A–2030E</div>
+      <div><em>Company</em>Northfield Packaging (fictional)</div>
+      <div><em>Built in</em>Excel · rebuilt in JS</div>
+    </div>
+  </div>
+</section>
+
+<!-- PY-04 ------------------------------------------------------------- -->
+<section class="case" id="automation">
+  <div class="wrap">
+    <div class="case-head">
+      <div>
+        <div class="sheet-tag"><span class="code">PY-04</span><span class="eyebrow">FP&amp;A automation in Python</span><span class="tag tag--demo">Demo · fictional company</span></div>
+        <h2>Harbor &amp; Pine Supply: a 13-week cash flow that builds itself</h2>
+        <p class="brief" style="margin-top:14px">A building-materials distributor rebuilt its cash forecast by hand every Monday from five ERP exports. This Python script now does it in seconds, using each customer's actual payment history instead of the due dates on the invoices.</p>
+      </div>
+      <div>
+        <p class="eyebrow answers-label">What the script delivers</p>
+        <ul class="answers">
+          <li>Weekly receipts and disbursements for 13 weeks, by category</li>
+          <li>Revolver draws and repayments that hold a minimum cash balance</li>
+          <li>Automatic flags: cash shortfalls, stale receivables, slow payers, concentration</li>
+          <li>A formatted Excel report and a JSON feed for this dashboard</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pipeline" style="margin-top:32px">
+      <div><b>Load</b>5 CSV exports, schema and duplicate checks</div>
+      <div><b>Learn</b>Weighted median days late per customer</div>
+      <div><b>Collect</b>Open AR and forecast sales by expected week</div>
+      <div><b>Pay</b>AP due dates and recurring items</div>
+      <div><b>Roll</b>Weekly cash with revolver logic</div>
+      <div><b>Report</b>Excel, JSON and risk flags</div>
+    </div>
+
+    <div class="model" style="grid-template-columns:minmax(0,1fr)">
+      <div class="outputs">
+        <button type="button" class="reset" id="py-download" style="margin-bottom:16px">Download Excel report (.xlsx)</button>
+        <div class="run-log" id="py-log"></div>
+        <div class="kpis" id="py-kpis"></div>
+        <div class="chart-block">
+          <div class="chart-title"><strong>Weekly cash position</strong><span>US$, output of the script on the sample data</span></div>
+          <div class="legend"><span><i class="line" style="background:var(--s1)"></i>Cash before revolver</span><span><i style="background:var(--s2)"></i>Revolver balance</span><span><i class="line" style="background:var(--muted)"></i>Minimum cash</span></div>
+          <div class="chart" id="py-chart"></div>
+        </div>
+        <div class="two-col">
+          <div>
+            <div class="chart-title"><strong>Flags raised by the script</strong></div>
+            <ul class="flags" id="py-flags" style="margin-top:8px"></ul>
+          </div>
+          <div>
+            <div class="chart-title"><strong>Customer payment behavior</strong><span>Weighted median days paid after due date</span></div>
+            <div class="hbars" id="py-behavior" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <div>
+          <div class="chart-title"><strong>13-week cash flow</strong><span>US$ thousands, as exported to Excel</span></div>
+          <div class="scroll-x"><table class="grid" id="py-table"></table></div>
+        </div>
+        <div class="code-block">
+          <div class="code-head"><span class="mono">cash_forecast_13w.py</span><button type="button" class="reset" id="copy-code">Copy code</button></div>
+          <pre class="code" id="py-code"></pre>
+        </div>
+      </div>
+    </div>
+    <div class="case-foot">
+      <div><em>Sheet</em><span class="mono">PY-04</span></div>
+      <div><em>Scale</em>Weekly, 13 periods</div>
+      <div><em>Company</em>Harbor &amp; Pine Supply (fictional)</div>
+      <div><em>Built in</em>Python · pandas · openpyxl</div>
+    </div>
+  </div>
+</section>
+
+<!-- How I work ---------------------------------------------------------- -->
+<section class="offer" id="how-i-work">
+  <div class="wrap">
+    <p class="eyebrow">How I work</p>
+    <h2>What you get, and how we start</h2>
+    <p class="brief" style="margin-top:14px">I build the model, but you own it afterward. No black boxes, and no need for me to stay involved just to keep it running.</p>
+    <div class="method" style="margin-top:32px">
+      <div><h4>A model you can open</h4><p>Delivered in Excel or Python, depending on the job. Never just a PDF or a number with no trail back to the assumptions behind it.</p></div>
+      <div><h4>Assumptions kept separate</h4><p>Every input lives apart from the calculations, so you can see exactly what is driving the output, and change it yourself later.</p></div>
+      <div><h4>A short walkthrough</h4><p>Before I hand it off, we go through the model together so you and your team know how to use it without me.</p></div>
+    </div>
+    <div class="contact">
+      <div>
+        <h3>Already have a model?</h3>
+        <p>A model review is a smaller way to start: I check your existing spreadsheet for logic errors, hidden assumptions and structural risk before you rely on it for a decision.</p>
+      </div>
+      <a class="btn" href="https://www.upwork.com/freelancers/~019fb11a8bfae1aaf4" target="_blank" rel="noopener"><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#151715" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Ask about a model review</a>
+    </div>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="wrap">
+    <p class="eyebrow">About</p>
+    <div class="about-grid">
+      <div>
+        <h2>An architect who ended up running the numbers</h2>
+        <p style="margin-top:18px">I trained as an architect and moved into finance at a real estate developer and builder in southern Brazil, a company with about US$10M in annual revenue. For ten years I've owned the budgets, cash flow, feasibility studies and financing for its projects, reporting to the CEO and partners.</p>
+        <p>That background shapes how I model. I know what a construction schedule looks like on site, why costs bunch up in the middle of a build and what a bank will ask before releasing a loan. I write the model so the person signing the check can follow it.</p>
+        <p>I work in Excel for anything a client needs to own and edit, and in Python when the job is repetitive, data-heavy or needs to run every week without me.</p>
+      </div>
+      <dl class="cv">
+        <div><dt>2016–now</dt><dd>Corporate Finance &amp; FP&amp;A Manager<span>Allgayer Engenharia · real estate development &amp; construction</span></dd></div>
+        <div><dt>2026</dt><dd>Postgraduate degree, Financial Management<span>Fundação Getulio Vargas (FGV)</span></dd></div>
+        <div><dt>2025</dt><dd>CS50x and CS50P<span>Harvard University · computer science and Python</span></dd></div>
+        <div><dt>2018</dt><dd>Bachelor of Architecture<span>UniRitter</span></dd></div>
+        <div><dt>Languages</dt><dd>English (fluent), Portuguese (native), Spanish (conversational)</dd></div>
+        <div><dt>Time zone</dt><dd>UTC−3<span>Overlaps US East Coast business hours</span></dd></div>
+      </dl>
+    </div>
+    <div class="contact">
+      <div>
+        <h3>Have a project in mind?</h3>
+        <p>Send me a short description on Upwork and I'll reply with how I'd approach it.</p>
+      </div>
+      <a class="btn" href="https://www.upwork.com/freelancers/~019fb11a8bfae1aaf4" target="_blank" rel="noopener"><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#151715" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Message me on Upwork</a>
+    </div>
+  </div>
+</section>
+</main>
+<footer>
+  <div class="wrap">
+    <span>All companies, properties and figures in these case studies are fictional, created for demonstration only. Nothing here, including the downloadable files, is financial, legal or tax advice, and none of it should be used to make a real decision without a qualified financial professional reviewing your own numbers.</span>
+    <span>© 2026 Guilherme Allgayer</span>
+  </div>
+</footer>
+
+<script type="application/json" id="py-data">{
+ "as_of": "2026-11-02",
+ "opening_cash": 820000,
+ "min_cash": 500000,
+ "revolver_limit": 1500000,
+ "rows_processed": {
+  "ar_open": 179,
+  "ap_open": 71,
+  "history": 1400
+ },
+ "weeks": [
+  {
+   "week_start": "2026-11-02",
+   "Collections - open AR": 414960.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -244748.0,
+   "Payroll": -148000.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 414960.0,
+   "Total disbursements": -416248.0,
+   "Operating cash flow": -1287.0,
+   "Opening cash": 820000.0,
+   "Cash before revolver": 818713.0,
+   "Revolver draw / (repay)": 0.0,
+   "Closing cash": 818713.0,
+   "Revolver balance": 0.0,
+   "Liquidity headroom": 2318713.0
+  },
+  {
+   "week_start": "2026-11-09",
+   "Collections - open AR": 272338.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -86707.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": -85000.0,
+   "Taxes": 0.0,
+   "Total receipts": 272338.0,
+   "Total disbursements": -195207.0,
+   "Operating cash flow": 77132.0,
+   "Opening cash": 818713.0,
+   "Cash before revolver": 895844.0,
+   "Revolver draw / (repay)": 0.0,
+   "Closing cash": 895844.0,
+   "Revolver balance": 0.0,
+   "Liquidity headroom": 2395844.0
+  },
+  {
+   "week_start": "2026-11-16",
+   "Collections - open AR": 214431.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -296503.0,
+   "Payroll": -148000.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 214431.0,
+   "Total disbursements": -468003.0,
+   "Operating cash flow": -253572.0,
+   "Opening cash": 895844.0,
+   "Cash before revolver": 642272.0,
+   "Revolver draw / (repay)": 0.0,
+   "Closing cash": 642272.0,
+   "Revolver balance": 0.0,
+   "Liquidity headroom": 2142272.0
+  },
+  {
+   "week_start": "2026-11-23",
+   "Collections - open AR": 420218.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -282801.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 420218.0,
+   "Total disbursements": -306301.0,
+   "Operating cash flow": 113917.0,
+   "Opening cash": 642272.0,
+   "Cash before revolver": 756190.0,
+   "Revolver draw / (repay)": 0.0,
+   "Closing cash": 756190.0,
+   "Revolver balance": 0.0,
+   "Liquidity headroom": 2256190.0
+  },
+  {
+   "week_start": "2026-11-30",
+   "Collections - open AR": 301287.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -223888.0,
+   "Payroll": -148000.0,
+   "Rent": -62000.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 301287.0,
+   "Total disbursements": -457388.0,
+   "Operating cash flow": -156101.0,
+   "Opening cash": 756190.0,
+   "Cash before revolver": 600089.0,
+   "Revolver draw / (repay)": 0.0,
+   "Closing cash": 600089.0,
+   "Revolver balance": 0.0,
+   "Liquidity headroom": 2100089.0
+  },
+  {
+   "week_start": "2026-12-07",
+   "Collections - open AR": 413606.0,
+   "Collections - new sales": 0.0,
+   "Inventory": -888638.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 413606.0,
+   "Total disbursements": -912138.0,
+   "Operating cash flow": -498532.0,
+   "Opening cash": 600089.0,
+   "Cash before revolver": 101557.0,
+   "Revolver draw / (repay)": 398443.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 398443.0,
+   "Liquidity headroom": 1601557.0
+  },
+  {
+   "week_start": "2026-12-14",
+   "Collections - open AR": 300077.0,
+   "Collections - new sales": 265000.0,
+   "Inventory": -184350.0,
+   "Payroll": -148000.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": -85000.0,
+   "Taxes": -310000.0,
+   "Total receipts": 565077.0,
+   "Total disbursements": -750850.0,
+   "Operating cash flow": -185772.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 314228.0,
+   "Revolver draw / (repay)": 185772.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 584215.0,
+   "Liquidity headroom": 1415785.0
+  },
+  {
+   "week_start": "2026-12-21",
+   "Collections - open AR": 102820.0,
+   "Collections - new sales": 245000.0,
+   "Inventory": -170000.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 347820.0,
+   "Total disbursements": -193500.0,
+   "Operating cash flow": 154320.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 654320.0,
+   "Revolver draw / (repay)": -154320.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 429894.0,
+   "Liquidity headroom": 1570106.0
+  },
+  {
+   "week_start": "2026-12-28",
+   "Collections - open AR": 49290.0,
+   "Collections - new sales": 238000.0,
+   "Inventory": -170000.0,
+   "Payroll": -148000.0,
+   "Rent": -62000.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 287290.0,
+   "Total disbursements": -403500.0,
+   "Operating cash flow": -116210.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 383790.0,
+   "Revolver draw / (repay)": 116210.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 546104.0,
+   "Liquidity headroom": 1453896.0
+  },
+  {
+   "week_start": "2027-01-04",
+   "Collections - open AR": 24746.0,
+   "Collections - new sales": 252000.0,
+   "Inventory": -170000.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 276746.0,
+   "Total disbursements": -193500.0,
+   "Operating cash flow": 83246.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 583246.0,
+   "Revolver draw / (repay)": -83246.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 462858.0,
+   "Liquidity headroom": 1537142.0
+  },
+  {
+   "week_start": "2027-01-11",
+   "Collections - open AR": 14698.0,
+   "Collections - new sales": 279000.0,
+   "Inventory": -170000.0,
+   "Payroll": -148000.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": -85000.0,
+   "Taxes": 0.0,
+   "Total receipts": 293698.0,
+   "Total disbursements": -426500.0,
+   "Operating cash flow": -132802.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 367198.0,
+   "Revolver draw / (repay)": 132802.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 595660.0,
+   "Liquidity headroom": 1404340.0
+  },
+  {
+   "week_start": "2027-01-18",
+   "Collections - open AR": 0.0,
+   "Collections - new sales": 306000.0,
+   "Inventory": -170000.0,
+   "Payroll": 0.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 306000.0,
+   "Total disbursements": -193500.0,
+   "Operating cash flow": 112500.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 612500.0,
+   "Revolver draw / (repay)": -112500.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 483160.0,
+   "Liquidity headroom": 1516840.0
+  },
+  {
+   "week_start": "2027-01-25",
+   "Collections - open AR": 0.0,
+   "Collections - new sales": 323000.0,
+   "Inventory": -170000.0,
+   "Payroll": -148000.0,
+   "Rent": 0.0,
+   "Operating expenses": -23500.0,
+   "Debt service": 0.0,
+   "Taxes": 0.0,
+   "Total receipts": 323000.0,
+   "Total disbursements": -341500.0,
+   "Operating cash flow": -18500.0,
+   "Opening cash": 500000.0,
+   "Cash before revolver": 481500.0,
+   "Revolver draw / (repay)": 18500.0,
+   "Closing cash": 500000.0,
+   "Revolver balance": 501660.0,
+   "Liquidity headroom": 1498340.0
+  }
+ ],
+ "behavior": {
+  "Granite & Co.": 2.0,
+  "Redwood Homes": 3.0,
+  "Lakeside Framing": 7.0,
+  "Bayview Renovations": 9.0,
+  "Oakridge Remodeling": 12.0,
+  "Coastline Builders": 17.0,
+  "Pioneer Roofing": 22.0,
+  "Summit Contractors": 31.0,
+  "Northgate Developers": 43.0
+ },
+ "flags": [
+  {
+   "level": "warning",
+   "text": "Cash falls below the $500K minimum in weeks 6, 7, 9, 11, 13; revolver peaks at $596K of $1.5M."
+  },
+  {
+   "level": "critical",
+   "text": "$167K of AR is more than 120 days past due and excluded from receipts, mostly Northgate Developers ($167K)."
+  },
+  {
+   "level": "info",
+   "text": "Slowest payers by weighted median days late: Northgate Developers (43d), Summit Contractors (31d)."
+  },
+  {
+   "level": "info",
+   "text": "Coastline Builders represents 29% of collectible AR."
+  }
+ ]
+}</script>
+<script type="text/plain" id="py-src">
+"""13-week cash flow forecast built from raw ERP exports.
+
+Pipeline
+  1. Load and validate the exports (schema, duplicates, negative amounts)
+  2. Learn each customer's real payment behavior from 12 months of history
+  3. Project collections on open AR and on forecast sales
+  4. Schedule payables and recurring disbursements
+  5. Roll weekly cash, drawing/repaying the revolver to hold minimum cash
+  6. Flag risks and export an Excel report + JSON for the dashboard
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+DATA = Path(__file__).parent / "data"
+OUT = Path(__file__).parent / "output"
+
+AS_OF = pd.Timestamp("2026-11-02")
+WEEKS = pd.date_range(AS_OF, periods=13, freq="W-MON")
+OPENING_CASH = 820_000
+MIN_CASH = 500_000
+REVOLVER_LIMIT = 1_500_000
+TERMS_DAYS = 30
+BAD_DEBT_AFTER_DAYS = 120  # invoices this far past due are excluded from receipts
+
+KNOWN_CATEGORIES = ["Inventory", "Payroll", "Rent", "Operating expenses", "Debt service", "Taxes"]
+
+REQUIRED = {
+    "ar_open.csv": ["invoice_id", "customer", "due_date", "amount"],
+    "ap_open.csv": ["bill_id", "vendor", "due_date", "amount", "category"],
+    "payments_history.csv": ["customer", "due_date", "paid_date", "amount"],
+    "recurring.csv": ["item", "category", "amount", "frequency", "first_date"],
+    "sales_forecast.csv": ["week_start", "forecast_sales"],
+}
+
+
+# 1. Load & validate ---------------------------------------------------------
+def load(name: str) -> pd.DataFrame:
+    df = pd.read_csv(DATA / name)
+    missing = set(REQUIRED[name]) - set(df.columns)
+    if missing:
+        raise ValueError(f"{name}: missing columns {sorted(missing)}")
+    for col in [c for c in df.columns if c.endswith("_date") or c == "week_start"]:
+        df[col] = pd.to_datetime(df[col])
+    key = df.columns[0]
+    if df[key].duplicated().any() and name not in ("payments_history.csv", "recurring.csv"):
+        raise ValueError(f"{name}: duplicate {key} values")
+    if "amount" in df and (df["amount"] < 0).any():
+        raise ValueError(f"{name}: negative amounts found")
+    return df
+
+
+def week_of(dates: pd.Series) -> pd.Series:
+    """Map dates to week index 0-12; earlier dates land in week 0, later ones are dropped."""
+    idx = ((dates - AS_OF).dt.days // 7).clip(lower=0)
+    return idx.where(idx < len(WEEKS))
+
+
+# 2. Payment behavior ----------------------------------------------------------
+def payment_behavior(hist: pd.DataFrame) -> pd.Series:
+    hist = hist.assign(days_late=(hist.paid_date - hist.due_date).dt.days)
+    # amount-weighted median is more robust than a mean against one-off disputes
+    def wmedian(g):
+        g = g.sort_values("days_late")
+        cum = g.amount.cumsum() / g.amount.sum()
+        return float(g.days_late[cum >= 0.5].iloc[0])
+    return hist.groupby("customer")[["days_late", "amount"]].apply(wmedian)
+
+
+# 3. Collections ------------------------------------------------------------------
+def project_collections(ar, sales, behavior):
+    portfolio_late = float(np.average(behavior.values))
+    ar = ar.assign(days_late=ar.customer.map(behavior).fillna(portfolio_late))
+    past_due = (AS_OF - ar.due_date).dt.days
+    ar["collectible"] = past_due <= BAD_DEBT_AFTER_DAYS
+    ar["expected_date"] = ar.due_date + pd.to_timedelta(ar.days_late, unit="D")
+    # anything already expected in the past is assumed to arrive over the next two weeks
+    overdue = ar.expected_date < AS_OF
+    ar.loc[overdue, "expected_date"] = AS_OF + pd.to_timedelta(
+        np.where(ar.index[overdue] % 2 == 0, 3, 10), unit="D")
+    ar["week"] = week_of(ar.expected_date)
+    open_ar = ar[ar.collectible].groupby("week").amount.sum()
+
+    new = sales.assign(expected_date=sales.week_start + pd.Timedelta(days=TERMS_DAYS + portfolio_late))
+    new["week"] = week_of(new.expected_date)
+    new_sales = new.groupby("week").forecast_sales.sum()
+    return open_ar, new_sales, ar
+
+
+# 4. Disbursements ------------------------------------------------------------------
+def expand_recurring(rec: pd.DataFrame) -> pd.DataFrame:
+    step = {"weekly": pd.DateOffset(weeks=1), "biweekly": pd.DateOffset(weeks=2),
+            "monthly": pd.DateOffset(months=1)}
+    rows, end = [], WEEKS[-1] + pd.Timedelta(days=6)
+    for r in rec.itertuples():
+        d = r.first_date
+        while d <= end:
+            rows.append((d, r.category, r.amount))
+            if r.frequency == "once":
+                break
+            d = d + step[r.frequency]
+    out = pd.DataFrame(rows, columns=["date", "category", "amount"])
+    out["week"] = week_of(out.date)
+    return out
+
+
+# 5. Weekly roll-forward with revolver ------------------------------------------------
+def build_forecast(open_ar, new_sales, ap, recurring) -> pd.DataFrame:
+    wk = pd.DataFrame(index=range(len(WEEKS)))
+    wk["week_start"] = WEEKS
+    wk["Collections - open AR"] = open_ar.reindex(wk.index, fill_value=0)
+    wk["Collections - new sales"] = new_sales.reindex(wk.index, fill_value=0)
+    ap = ap.assign(week=week_of(ap.due_date))
+    outflows = pd.concat([ap[["week", "category", "amount"]],
+                          recurring[["week", "category", "amount"]]])
+    unknown = set(outflows.category) - set(KNOWN_CATEGORIES)
+    if unknown:
+        raise ValueError(f"ap_open.csv / recurring.csv: unrecognized categories {sorted(unknown)}; "
+                          f"expected one of {KNOWN_CATEGORIES}")
+    by_cat = outflows.pivot_table(index="week", columns="category", values="amount",
+                                  aggfunc="sum").reindex(wk.index, fill_value=0).fillna(0)
+    for cat in KNOWN_CATEGORIES:
+        wk[cat] = -by_cat.get(cat, 0)
+
+    receipt_cols = ["Collections - open AR", "Collections - new sales"]
+    disb_cols = KNOWN_CATEGORIES
+    wk["Total receipts"] = wk[receipt_cols].sum(axis=1)
+    wk["Total disbursements"] = wk[disb_cols].sum(axis=1)
+    wk["Operating cash flow"] = wk["Total receipts"] + wk["Total disbursements"]
+
+    cash, revolver = OPENING_CASH, 0.0
+    rows = []
+    for ocf in wk["Operating cash flow"]:
+        pre = cash + ocf
+        draw = 0.0
+        if pre < MIN_CASH:                         # draw just enough to restore minimum
+            draw = min(MIN_CASH - pre, REVOLVER_LIMIT - revolver)
+        elif revolver > 0:                         # sweep excess cash to repay
+            draw = -min(revolver, pre - MIN_CASH)
+        revolver += draw
+        rows.append((cash, pre, draw, pre + draw, revolver))
+        cash = pre + draw
+    wk[["Opening cash", "Cash before revolver", "Revolver draw / (repay)",
+        "Closing cash", "Revolver balance"]] = rows
+    wk["Liquidity headroom"] = wk["Closing cash"] + (REVOLVER_LIMIT - wk["Revolver balance"])
+    return wk
+
+
+# 6. Flags & export ------------------------------------------------------------------
+def risk_flags(wk, ar, behavior):
+    flags = []
+    short = wk[wk["Cash before revolver"] < MIN_CASH]
+    if len(short):
+        peak = short["Revolver balance"].max()
+        flags.append({"level": "warning",
+                      "text": f"Cash falls below the ${MIN_CASH/1e3:,.0f}K minimum in weeks "
+                              f"{', '.join(str(i + 1) for i in short.index)}; revolver peaks at "
+                              f"${peak/1e3:,.0f}K of ${REVOLVER_LIMIT/1e6:.1f}M."})
+    stale = ar[~ar.collectible]
+    if len(stale):
+        top = stale.groupby("customer").amount.sum().sort_values(ascending=False)
+        flags.append({"level": "critical",
+                      "text": f"${stale.amount.sum()/1e3:,.0f}K of AR is more than {BAD_DEBT_AFTER_DAYS} days "
+                              f"past due and excluded from receipts, mostly {top.index[0]} "
+                              f"(${top.iloc[0]/1e3:,.0f}K)."})
+    slow = behavior[behavior > 25].sort_values(ascending=False)
+    if len(slow):
+        flags.append({"level": "info",
+                      "text": "Slowest payers by weighted median days late: " +
+                              ", ".join(f"{c} ({d:.0f}d)" for c, d in slow.items()) + "."})
+    share = ar[ar.collectible].groupby("customer").amount.sum()
+    share = share / share.sum()
+    if share.max() > 0.2:
+        flags.append({"level": "info",
+                      "text": f"{share.idxmax()} represents {share.max():.0%} of collectible AR."})
+    return flags
+
+
+def export_excel(wk: pd.DataFrame, path: Path):
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    table = wk.drop(columns=["week_start"]).T
+    table.columns = [f"Wk {i+1}\n{d:%b %d}" for i, d in enumerate(wk.week_start)]
+    table["13-wk total"] = table.sum(axis=1)
+    for r in ["Opening cash", "Cash before revolver", "Closing cash", "Revolver balance",
+              "Liquidity headroom"]:
+        table.loc[r, "13-wk total"] = np.nan  # balances are not additive
+    with pd.ExcelWriter(path, engine="openpyxl") as xw:
+        table.to_excel(xw, sheet_name="13-week cash flow")
+        ws = xw.sheets["13-week cash flow"]
+        ws.column_dimensions["A"].width = 28
+        for col in range(2, ws.max_column + 1):
+            ws.column_dimensions[get_column_letter(col)].width = 12
+            ws.cell(1, col).alignment = Alignment(wrap_text=True, horizontal="center")
+        for row in ws.iter_rows(min_row=2, min_col=2):
+            for c in row:
+                c.number_format = '#,##0;(#,##0);"-"'
+        bold = {"Total receipts", "Total disbursements", "Operating cash flow", "Closing cash"}
+        for r in range(2, ws.max_row + 1):
+            if ws.cell(r, 1).value in bold:
+                for c in range(1, ws.max_column + 1):
+                    ws.cell(r, c).font = Font(bold=True)
+                    ws.cell(r, c).fill = PatternFill("solid", fgColor="EEF2F7")
+        ws.freeze_panes = "B2"
+
+        wb = xw.book
+        notice = wb.create_sheet("Disclaimer")
+        notice.column_dimensions["A"].width = 100
+        lines = [
+            ("Demonstration file — fictional data", True),
+            ("", False),
+            ("Harbor & Pine Supply is a fictional company, and every figure in this workbook comes from a "
+             "synthetic sample dataset built only to demonstrate how this script forecasts cash flow.", False),
+            ("", False),
+            ("Nothing here is financial, legal or tax advice, and this file must not be used to make a real "
+             "business, lending or investment decision. If you need a cash flow model for an actual company, "
+             "hire a qualified financial professional to build and validate it on your own data.", False),
+            ("", False),
+            ("Guilherme Allgayer · upwork.com/freelancers/~019fb11a8bfae1aaf4", False),
+        ]
+        for i, (text, bold_line) in enumerate(lines, start=1):
+            c = notice.cell(i, 1, text)
+            c.alignment = Alignment(wrap_text=True)
+            if bold_line:
+                c.font = Font(bold=True, size=13)
+        wb.move_sheet("Disclaimer", offset=-1)
+
+
+def main():
+    ar, ap = load("ar_open.csv"), load("ap_open.csv")
+    hist, rec, sales = load("payments_history.csv"), load("recurring.csv"), load("sales_forecast.csv")
+
+    behavior = payment_behavior(hist)
+    open_ar, new_sales, ar_scored = project_collections(ar, sales, behavior)
+    recurring = expand_recurring(rec)
+    wk = build_forecast(open_ar, new_sales, ap, recurring)
+    flags = risk_flags(wk, ar_scored, behavior)
+
+    OUT.mkdir(exist_ok=True)
+    export_excel(wk, OUT / "13_week_cash_flow.xlsx")
+    payload = {
+        "as_of": str(AS_OF.date()), "opening_cash": OPENING_CASH, "min_cash": MIN_CASH,
+        "revolver_limit": REVOLVER_LIMIT,
+        "rows_processed": {"ar_open": len(ar), "ap_open": len(ap), "history": len(hist)},
+        "weeks": json.loads(wk.assign(week_start=wk.week_start.dt.strftime("%Y-%m-%d"))
+                            .round(0).to_json(orient="records")),
+        "behavior": behavior.round(0).sort_values().to_dict(),
+        "flags": flags,
+    }
+    (OUT / "forecast.json").write_text(json.dumps(payload, indent=1))
+    print(wk[["Total receipts", "Total disbursements", "Cash before revolver", "Closing cash",
+              "Revolver balance"]].round(0).to_string())
+    for f in flags:
+        print(f"[{f['level']}] {f['text']}")
+
+
+if __name__ == "__main__":
+    main()
+</script>
+<script type="text/plain" id="py-xlsx-b64">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</script>
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const num = v => Math.round(v).toLocaleString('en-US');
+const pct = (v, d = 1) => (isFinite(v) ? (v * 100).toFixed(d).replace('-', '−') + '%' : 'n/a');
+function money(v, d) {
+  if (!isFinite(v)) return 'n/a';
+  const a = Math.abs(v), s = v < 0 ? '−' : '';
+  if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(d ?? (a >= 1e7 ? 1 : 2)) + 'M';
+  if (a >= 1e3) return s + '$' + (a / 1e3).toFixed(d ?? 0) + 'K';
+  return s + '$' + a.toFixed(0);
+}
+const axisMoney = v => (v === 0 ? '0' : money(v, Math.abs(v) >= 1e6 && Math.abs(v) % 1e6 ? 1 : 0));
+const k = v => { const r = Math.round(v / 1000); return r < 0 ? '(' + Math.abs(r).toLocaleString('en-US') + ')' : r === 0 ? '–' : r.toLocaleString('en-US'); };
+
+/* ---------- finance helpers ---------- */
+function npv(r, cfs) { let s = 0; for (let i = 0; i < cfs.length; i++) s += cfs[i] / Math.pow(1 + r, i); return s; }
+function irr(cfs) {
+  let lo = -0.9, hi = 1.5, flo = npv(lo, cfs), fhi = npv(hi, cfs);
+  if (!(flo * fhi < 0)) return NaN;
+  for (let i = 0; i < 200; i++) {
+    const m = (lo + hi) / 2, fm = npv(m, cfs);
+    if (Math.abs(hi - lo) < 1e-10) return m;
+    if (flo * fm < 0) { hi = m; fhi = fm; } else { lo = m; flo = fm; }
+  }
+  return (lo + hi) / 2;
+}
+const annual = m => Math.pow(1 + m, 12) - 1;
+const cumsum = a => { let s = 0; return a.map(v => (s += v)); };
+
+/* ---------- xlsx export (minimal OOXML writer, no external library) ---------- */
+const UTF8 = new TextEncoder();
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipStore(files) {
+  let offset = 0;
+  const parts = [], central = [];
+  const now = new Date();
+  const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+  const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+  files.forEach(f => {
+    const name = UTF8.encode(f.name), data = f.data, crc = crc32(data), at = offset;
+    const lh = new Uint8Array(30 + name.length), lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0, true); lv.setUint16(8, 0, true);
+    lv.setUint16(10, dosTime, true); lv.setUint16(12, dosDate, true); lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, name.length, true); lv.setUint16(28, 0, true);
+    lh.set(name, 30);
+    parts.push(lh, data); offset += lh.length + data.length;
+    const ch = new Uint8Array(46 + name.length), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0, true); cv.setUint16(10, 0, true);
+    cv.setUint16(12, dosTime, true); cv.setUint16(14, dosDate, true); cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true); cv.setUint16(28, name.length, true);
+    cv.setUint32(42, at, true);
+    ch.set(name, 46);
+    central.push(ch);
+  });
+  const cOffset = offset; let cSize = 0; central.forEach(c => cSize += c.length);
+  const end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cSize, true); ev.setUint32(16, cOffset, true);
+  return new Blob([...parts, ...central, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+const colLetter = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+const xmlEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const ST_BOLD = 1, ST_MONEY = 2, ST_MONEY2 = 3, ST_PCT = 4, ST_NUM = 5, ST_BOLDMONEY = 6, ST_MULT = 7, ST_DEC2 = 8;
+const cell = (v, s) => ({ v, s });
+const STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+  '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+  '<numFmts count="6">' +
+  '<numFmt numFmtId="164" formatCode="$#,##0"/><numFmt numFmtId="165" formatCode="$#,##0.00"/>' +
+  '<numFmt numFmtId="166" formatCode="0.0%"/><numFmt numFmtId="167" formatCode="#,##0"/>' +
+  '<numFmt numFmtId="168" formatCode="0.00&quot;×&quot;"/><numFmt numFmtId="169" formatCode="0.00"/></numFmts>' +
+  '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+  '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
+  '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+  '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+  '<cellXfs count="9">' +
+  '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+  '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/>' +
+  '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="167" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="164" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="168" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="169" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '</cellXfs>' +
+  '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+  '</styleSheet>';
+function sheetXml(rows, colWidths, freeze) {
+  let maxCol = 1;
+  rows.forEach(r => { if (r.length > maxCol) maxCol = r.length; });
+  let body = '';
+  rows.forEach((r, ri) => {
+    let cells = '';
+    r.forEach((c, ci) => {
+      if (c == null || c === '') return;
+      const ref = colLetter(ci) + (ri + 1);
+      const isObj = typeof c === 'object';
+      const v = isObj ? c.v : c, s = isObj ? c.s : 0;
+      const sAttr = s ? ` s="${s}"` : '';
+      if (typeof v === 'number' && isFinite(v)) cells += `<c r="${ref}"${sAttr}><v>${v}</v></c>`;
+      else cells += `<c r="${ref}"${sAttr} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    });
+    body += `<row r="${ri + 1}">${cells}</row>`;
+  });
+  const dim = `A1:${colLetter(maxCol - 1)}${Math.max(1, rows.length)}`;
+  const cols = colWidths ? `<cols>${colWidths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` : '';
+  const views = freeze ? `<sheetViews><sheetView workbookViewId="0"><pane xSplit="${freeze.col || 0}" ySplit="${freeze.row || 0}" topLeftCell="${colLetter(freeze.col || 0)}${(freeze.row || 0) + 1}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>` : '';
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="${dim}"/>${views}${cols}<sheetData>${body}</sheetData></worksheet>`;
+}
+function buildXlsxBlob(sheets) {
+  const files = [
+    { name: '[Content_Types].xml', data: UTF8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') +
+      '</Types>') },
+    { name: '_rels/.rels', data: UTF8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>') },
+    { name: 'xl/workbook.xml', data: UTF8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+      sheets.map((s, i) => `<sheet name="${xmlEsc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') +
+      '</sheets></workbook>') },
+    { name: 'xl/_rels/workbook.xml.rels', data: UTF8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') +
+      `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
+      '</Relationships>') },
+    { name: 'xl/styles.xml', data: UTF8.encode(STYLES_XML) },
+  ];
+  sheets.forEach((sh, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: UTF8.encode(sheetXml(sh.rows, sh.colWidths, sh.freeze)) }));
+  return zipStore(files);
+}
+function downloadXlsx(filename, sheets) {
+  const url = URL.createObjectURL(buildXlsxBlob(sheets));
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+function disclaimerSheet() {
+  return {
+    name: 'Disclaimer',
+    rows: [
+      [cell('Demonstration file — fictional data', ST_BOLD)],
+      [],
+      ['This workbook was generated from a fictional case study, built to demonstrate modeling technique for a freelance portfolio. The company, property and every figure in it are made up.'],
+      [],
+      ['This is a snapshot of the scenario shown on the site at the time of export, not a formula-driven model: changing a number here will not recalculate the rest of the sheet.'],
+      [],
+      ['Nothing here is financial, legal or tax advice, and this file must not be used to make a real business, lending or investment decision. If you need a model like this for an actual deal, hire a qualified financial professional to build and validate it on your own numbers.'],
+      [],
+      ['Guilherme Allgayer · upwork.com/freelancers/~019fb11a8bfae1aaf4'],
+    ],
+    colWidths: [100],
+  };
+}
+function downloadBase64(filename, b64, mime) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+/* ---------- inputs ---------- */
+function buildInputs(prefix, defs, onChange) {
+  const state = {};
+  defs.forEach(d => {
+    const g = $(`[data-group="${d.group}"]`);
+    const id = `${prefix}-${d.id}`;
+    const f = document.createElement('div');
+    f.className = 'field';
+    f.innerHTML = `<label for="${id}"><span>${d.label}</span><output for="${id}"></output></label>` +
+      `<input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${d.value}">`;
+    g.appendChild(f);
+    const inp = f.querySelector('input'), out = f.querySelector('output');
+    const upd = () => { state[d.id] = parseFloat(inp.value); out.textContent = d.fmt(state[d.id]); };
+    inp.addEventListener('input', () => { upd(); onChange(); });
+    d.reset = () => { inp.value = d.value; upd(); };
+    upd();
+  });
+  $(`[data-reset="${prefix}"]`).addEventListener('click', () => { defs.forEach(d => d.reset()); onChange(); });
+  return state;
+}
+
+/* ---------- chart ---------- */
+function niceScale(min, max, count = 5) {
+  if (min === max) { max = min + 1; }
+  const step0 = (max - min) / count, mag = Math.pow(10, Math.floor(Math.log10(step0))), e = step0 / mag;
+  const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, ticks = [];
+  for (let v = lo; v <= hi + step * 1e-6; v += step) ticks.push(Math.abs(v) < step * 1e-6 ? 0 : v);
+  return { lo, hi, ticks };
+}
+function barPath(x, w, yBase, yEnd, round) {
+  const top = Math.min(yBase, yEnd), bot = Math.max(yBase, yEnd), h = bot - top;
+  if (h < 0.5) return '';
+  const r = round ? Math.min(4, w / 2, h) : 0;
+  if (!r) return `M${x},${top}h${w}v${h}h${-w}Z`;
+  if (yEnd < yBase) return `M${x},${bot}V${top + r}Q${x},${top} ${x + r},${top}H${x + w - r}Q${x + w},${top} ${x + w},${top + r}V${bot}Z`;
+  return `M${x},${top}H${x + w}V${bot - r}Q${x + w},${bot} ${x + w - r},${bot}H${x + r}Q${x},${bot} ${x},${bot - r}Z`;
+}
+const charts = [];
+let rT; const ro = new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => charts.forEach(c => { if (Math.abs((c.clientWidth || 0) - (c._geo ? c._geo.W : 0)) > 2) render(c); }), 80); });
+function chart(el, cfg) {
+  el._cfg = cfg;
+  if (!el._init) {
+    el._init = true; charts.push(el); ro.observe(el);
+    el.innerHTML = '<svg role="img"></svg><div class="tip" hidden></div>';
+    if (cfg.legend) {
+      const lg = document.createElement('div'); lg.className = 'legend'; lg.style.marginBottom = '6px';
+      lg.innerHTML = cfg.legend.map(l => `<span><i class="${l.line ? 'line' : ''}" style="background:${l.color}"></i>${l.name}</span>`).join('');
+      el.before(lg);
+    }
+    const svg = el.querySelector('svg');
+    svg.addEventListener('pointermove', e => hover(el, e));
+    svg.addEventListener('pointerleave', () => { el.querySelector('.tip').hidden = true; const x = svg.querySelector('.xhair'); if (x) x.style.display = 'none'; });
+  }
+  render(el);
+}
+function render(el) {
+  const cfg = el._cfg, svg = el.querySelector('svg');
+  const W = Math.max(260, el.clientWidth || 600), H = cfg.height || 240;
+  const m = { l: 60, r: 16, t: 18, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = cfg.labels.length;
+  const bars = cfg.series.filter(s => s.type === 'bar'), lines = cfg.series.filter(s => s.type !== 'bar');
+  const pos = new Array(n).fill(0), neg = new Array(n).fill(0);
+  bars.forEach(s => s.values.forEach((v, i) => { if (v > 0) pos[i] += v; else neg[i] += v; }));
+  const vals = [0, ...pos, ...neg, ...(cfg.refs || []).map(r => r.value)];
+  lines.forEach(s => vals.push(...s.values));
+  const sc = niceScale(Math.min(...vals), Math.max(...vals), cfg.ticks || 5);
+  const y = v => m.t + ih * (1 - (v - sc.lo) / (sc.hi - sc.lo));
+  const bw = iw / n, cx = i => m.l + bw * (i + 0.5);
+  let out = '';
+  sc.ticks.forEach(t => {
+    out += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(${t === 0 ? '--axis' : '--grid'});stroke-width:1"/>`;
+    out += `<text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end">${(cfg.yFmt || axisMoney)(t)}</text>`;
+  });
+  const every = Math.max(1, Math.ceil(n * (cfg.xLabelWidth || 46) / iw));
+  cfg.labels.forEach((l, i) => { if (i % every === 0 || cfg.allX) out += `<text x="${cx(i)}" y="${H - 8}" text-anchor="middle">${l}</text>`; });
+  // bars (stacked, 2px surface gap, rounded data end on outermost segment)
+  const w = Math.min(24, bw * 0.72);
+  for (let i = 0; i < n; i++) {
+    let up = 0, dn = 0;
+    const lastUp = bars.map(s => s.values[i] > 0).lastIndexOf(true), lastDn = bars.map(s => s.values[i] < 0).lastIndexOf(true);
+    bars.forEach((s, j) => {
+      const v = s.values[i]; if (!v) return;
+      const base = v > 0 ? up : dn, end = base + v;
+      let y0 = y(base), y1 = y(end);
+      if (base !== 0) y0 += v > 0 ? -1 : 1;
+      if (j !== (v > 0 ? lastUp : lastDn)) y1 += v > 0 ? 1 : -1;
+      if (s.color !== 'none') out += `<path d="${barPath(cx(i) - w / 2, w, y0, y1, j === (v > 0 ? lastUp : lastDn))}" style="fill:${s.color}"/>`;
+      if (v > 0) up = end; else dn = end;
+    });
+  }
+  (cfg.refs || []).forEach(r => {
+    out += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(r.value)}" y2="${y(r.value)}" style="stroke:var(--muted);stroke-width:1"/>`;
+    out += `<text x="${m.l + 6}" y="${y(r.value) - 6}" text-anchor="start" style="fill:var(--ink-2)">${r.label}</text>`;
+  });
+  lines.forEach(s => {
+    const pts = s.values.map((v, i) => `${cx(i).toFixed(1)},${y(v).toFixed(1)}`);
+    if (s.type === 'area') out += `<path d="M${cx(0)},${y(0)}L${pts.join('L')}L${cx(n - 1)},${y(0)}Z" style="fill:${s.color};opacity:0.1"/>`;
+    out += `<path d="M${pts.join('L')}" style="fill:none;stroke:${s.color};stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>`;
+  });
+  (cfg.marks || []).forEach(mk => {
+    const px = cx(mk.i), py = y(mk.value), below = mk.below;
+    out += `<circle cx="${px}" cy="${py}" r="4.5" style="fill:${mk.color || 'var(--ink)'};stroke:var(--sheet);stroke-width:2"/>`;
+    const anchor = px < m.l + 90 ? 'start' : px > W - m.r - 90 ? 'end' : 'middle';
+    out += `<text x="${px}" y="${below ? py + 18 : py - 10}" text-anchor="${anchor}" style="fill:var(--ink);font-weight:500">${mk.label}</text>`;
+  });
+  (cfg.barLabels || []).forEach(bl => {
+    out += `<text x="${cx(bl.i)}" y="${y(bl.value) + (bl.value >= 0 ? -6 : 14)}" text-anchor="middle" style="fill:var(--ink-2)">${bl.text}</text>`;
+  });
+  out += `<line class="xhair" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--axis);stroke-width:1;display:none"/>`;
+  out += `<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" style="fill:transparent"/>`;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+  svg.setAttribute('aria-label', cfg.aria || '');
+  svg.innerHTML = out;
+  el._geo = { m, bw, cx, n, W };
+}
+function hover(el, e) {
+  const cfg = el._cfg, g = el._geo, svg = el.querySelector('svg'), tip = el.querySelector('.tip');
+  const rect = svg.getBoundingClientRect(), sx = (e.clientX - rect.left) * (g.W / rect.width);
+  const i = Math.floor((sx - g.m.l) / g.bw);
+  if (i < 0 || i >= g.n) { tip.hidden = true; return; }
+  const xh = svg.querySelector('.xhair'); xh.setAttribute('x1', g.cx(i)); xh.setAttribute('x2', g.cx(i)); xh.style.display = '';
+  const rows = cfg.series.filter(s => !s.hideTip && (s.values[i] !== 0 || s.type !== 'bar'))
+    .map(s => `<div><span><i style="background:${s.color}"></i>${s.name}</span><span>${(cfg.tipFmt || money)(s.values[i])}</span></div>`).join('');
+  tip.innerHTML = `<b>${cfg.tipTitle ? cfg.tipTitle(i) : cfg.labels[i]}</b>${rows}${cfg.tipExtra ? cfg.tipExtra(i) : ''}`;
+  tip.hidden = false;
+  const px = g.cx(i) * (rect.width / g.W), tw = tip.offsetWidth;
+  tip.style.left = Math.min(Math.max(0, px + 12 + tw > rect.width ? px - tw - 12 : px + 12), rect.width - tw) + 'px';
+  tip.style.top = '8px';
+}
+
+function kpis(el, items) {
+  el.innerHTML = items.map(t => `<div class="kpi"><div class="k-label">${t.label}</div><div class="k-value">${t.value}</div>${t.note ? `<div class="k-note ${t.tone || ''}">${t.note}</div>` : ''}</div>`).join('');
+}
+function divergingCell(diff, scale) {
+  const t = Math.min(1, Math.abs(diff) / scale), pctMix = Math.round(12 + 48 * t);
+  return `background:color-mix(in srgb, var(${diff >= 0 ? '--div-pos' : '--div-neg'}) ${pctMix}%, var(--div-mid))`;
+}
+
+/* =================== FS-01 Development feasibility =================== */
+const FS = [
+  { group: 'fs-a', id: 'land', label: 'Land price', min: 1.5e6, max: 4e6, step: 5e4, value: 2.6e6, fmt: v => money(v) },
+  { group: 'fs-a', id: 'area', label: 'Sellable area', min: 4000, max: 7000, step: 100, value: 5400, fmt: v => num(v) + ' m²' },
+  { group: 'fs-a', id: 'price', label: 'Sale price per m²', min: 2200, max: 3600, step: 25, value: 2900, fmt: v => '$' + num(v) },
+  { group: 'fs-a', id: 'cost', label: 'Hard cost per m² built', min: 800, max: 1500, step: 10, value: 1100, fmt: v => '$' + num(v) },
+  { group: 'fs-a', id: 'soft', label: 'Soft costs, % of hard cost', min: 0.06, max: 0.2, step: 0.005, value: 0.12, fmt: v => pct(v) },
+  { group: 'fs-a', id: 'selling', label: 'Sales & marketing, % of GDV', min: 0.02, max: 0.08, step: 0.0025, value: 0.05, fmt: v => pct(v, 2) },
+  { group: 'fs-b', id: 'pre', label: 'Approvals before launch', min: 3, max: 12, step: 1, value: 6, fmt: v => v + ' months' },
+  { group: 'fs-b', id: 'build', label: 'Construction period', min: 18, max: 36, step: 1, value: 24, fmt: v => v + ' months' },
+  { group: 'fs-b', id: 'presale', label: 'Units sold at launch', min: 0.1, max: 0.6, step: 0.01, value: 0.3, fmt: v => pct(v, 0) },
+  { group: 'fs-b', id: 'post', label: 'Sell-out after completion', min: 0, max: 18, step: 1, value: 6, fmt: v => v + ' months' },
+  { group: 'fs-b', id: 'during', label: 'Price paid before handover', min: 0.1, max: 0.5, step: 0.01, value: 0.3, fmt: v => pct(v, 0) },
+  { group: 'fs-c', id: 'ltc', label: 'Loan share of hard costs', min: 0, max: 0.8, step: 0.05, value: 0.6, fmt: v => pct(v, 0) },
+  { group: 'fs-c', id: 'rate', label: 'Loan interest rate', min: 0.06, max: 0.16, step: 0.0025, value: 0.11, fmt: v => pct(v, 2) },
+  { group: 'fs-c', id: 'hurdle', label: 'Equity hurdle rate', min: 0.1, max: 0.3, step: 0.01, value: 0.18, fmt: v => pct(v, 0) },
+];
+const GROSS_UP = 1.30; // built area per m² sellable (walls, circulation, common areas)
+
+function feasibility(p) {
+  const built = p.area * GROSS_UP, GDV = p.area * p.price, hardT = built * p.cost, softT = hardT * p.soft;
+  const C = p.pre + p.build, T = C + p.post, N = T + 1;
+  const z = () => new Array(N).fill(0);
+  const land = z(), hard = z(), soft = z(), sell = z(), rec = z(), sold = z();
+  land[0] = p.land;
+  for (let mo = 0; mo < p.pre; mo++) soft[mo] += softT * 0.4 / p.pre;
+  const w = []; let ws = 0;
+  for (let i = 0; i < p.build; i++) { const x = Math.sin(Math.PI * (i + 0.5) / p.build); w.push(x); ws += x; }
+  for (let i = 0; i < p.build; i++) { hard[p.pre + i] = hardT * w[i] / ws; soft[p.pre + i] += softT * 0.6 / p.build; }
+  sold[p.pre] = p.presale;
+  const rest = T - p.pre;
+  for (let mo = p.pre + 1; mo <= T; mo++) sold[mo] += (1 - p.presale) / rest;
+  const dep = Math.min(0.1, p.during), inst = p.during - dep;
+  for (let mo = 0; mo <= T; mo++) {
+    if (!sold[mo]) continue;
+    const v = sold[mo] * GDV;
+    sell[mo] += v * p.selling;
+    if (mo < C) {
+      rec[mo] += v * dep;
+      const kk = C - 1 - mo;
+      if (kk > 0) for (let j = mo + 1; j < C; j++) rec[j] += v * inst / kk; else rec[C] += v * inst;
+      rec[C] += v * (1 - p.during);
+    } else rec[mo] += v;
+  }
+  const cost = z(), unlev = z();
+  for (let mo = 0; mo < N; mo++) { cost[mo] = land[mo] + hard[mo] + soft[mo] + sell[mo]; unlev[mo] = rec[mo] - cost[mo]; }
+  const r = Math.pow(1 + p.rate, 1 / 12) - 1, eq = z(), loanBal = z();
+  let bal = 0, intT = 0, drawT = 0;
+  for (let mo = 0; mo < N; mo++) {
+    const interest = bal * r; bal += interest; intT += interest;
+    const d = hard[mo] * p.ltc; bal += d; drawT += d;
+    let rp = mo >= C ? Math.min(bal, Math.max(0, unlev[mo] + d)) : 0;
+    if (mo === T) rp = bal;
+    bal -= rp; loanBal[mo] = bal;
+    eq[mo] = unlev[mo] + d - rp;
+  }
+  let cum = 0, minCum = 0, minM = 0; const cumArr = [];
+  eq.forEach((v, mo) => { cum += v; cumArr.push(cum); if (cum < minCum) { minCum = cum; minM = mo; } });
+  let payback = null;
+  for (let mo = minM; mo < N; mo++) if (cumArr[mo] >= 0) { payback = mo; break; }
+  const totalCost = p.land + hardT + softT + GDV * p.selling + intT;
+  const eqIn = -eq.filter(v => v < 0).reduce((a, b) => a + b, 0), eqOut = eq.filter(v => v > 0).reduce((a, b) => a + b, 0);
+  return {
+    N, C, T, GDV, hardT, softT, built, cost, rec, eq, cumArr, intT, drawT, profit: cum, totalCost,
+    margin: cum / GDV, poc: cum / totalCost, peakEq: -minCum, peakM: minM, payback,
+    eIrr: annual(irr(eq)), uIrr: annual(irr(unlev)), npvE: npv(Math.pow(1 + p.hurdle, 1 / 12) - 1, eq), em: eqOut / eqIn, eqIn,
+  };
+}
+let fsLast;
+const fsState = buildInputs('fs', FS, updateFS);
+function phase(mo, R, p) { return mo < p.pre ? 'Approvals' : mo < R.C ? 'Construction' : mo === R.C ? 'Completion & handover' : 'Sell-out'; }
+function updateFS() {
+  const p = fsState, R = feasibility(p);
+  fsLast = R;
+  const ok = R.eIrr >= p.hurdle;
+  kpis($('#fs-kpis'), [
+    { label: 'Equity IRR', value: pct(R.eIrr), note: `${ok ? 'Above' : 'Below'} ${pct(p.hurdle, 0)} hurdle · unlevered ${pct(R.uIrr)}`, tone: ok ? 'good' : 'bad' },
+    { label: 'Profit after financing', value: money(R.profit), note: `${pct(R.margin)} of GDV · ${pct(R.poc)} on cost` },
+    { label: 'Peak equity', value: money(R.peakEq), note: `Reached in month ${R.peakM}` },
+    { label: 'Equity multiple', value: isFinite(R.em) ? R.em.toFixed(2) + '×' : 'n/a', note: R.payback != null ? `Equity repaid by month ${R.payback}` : 'Equity not repaid' },
+  ]);
+  $('#fs-verdict').innerHTML = `<span class="pill ${ok ? 'good' : 'critical'}"><i></i>${ok ? 'Proceed' : 'Rework'}</span><span>` + (ok
+    ? `GDV of ${money(R.GDV)} against ${money(R.totalCost)} of total cost. The deal clears the ${pct(p.hurdle, 0)} hurdle with an NPV of ${money(R.npvE)} to equity. Partners fund up to ${money(R.peakEq)} by month ${R.peakM}${R.payback != null ? ` and are fully repaid in month ${R.payback}` : ''}.`
+    : `At these assumptions equity IRR is ${pct(R.eIrr)}, short of the ${pct(p.hurdle, 0)} hurdle (NPV ${money(R.npvE)}). Look at land price, pre-sales or the payment plan before committing.`) + '</span>';
+  const labels = R.cumArr.map((_, i) => 'M' + i);
+  const marks = [{ i: R.peakM, value: -R.peakEq, label: `Peak ${money(-R.peakEq)}`, below: true }];
+  if (R.payback != null) marks.push({ i: R.payback, value: R.cumArr[R.payback], label: `Repaid M${R.payback}` });
+  marks.push({ i: R.N - 1, value: R.profit, label: money(R.profit) });
+  chart($('#fs-chart-equity'), {
+    labels, height: 250, aria: 'Cumulative equity position by month',
+    series: [{ name: 'Cumulative equity', type: 'area', values: R.cumArr, color: 'var(--s1)' }],
+    marks, tipTitle: i => `Month ${i} · ${phase(i, R, p)}`,
+  });
+  chart($('#fs-chart-flows'), {
+    labels, height: 210, aria: 'Cumulative development costs and buyer receipts by month',
+    series: [
+      { name: 'Development costs', type: 'line', values: cumsum(R.cost), color: 'var(--s2)' },
+      { name: 'Buyer receipts', type: 'line', values: cumsum(R.rec), color: 'var(--s1)' },
+    ],
+    tipTitle: i => `Month ${i} · ${phase(i, R, p)}`,
+  });
+  // sensitivity
+  const steps = [-0.1, -0.05, 0, 0.05, 0.1];
+  let h = '<thead><tr><th></th>' + steps.map(s => `<th>${s > 0 ? '+' : ''}${s * 100}%</th>`).join('') + '</tr></thead><tbody>';
+  steps.slice().reverse().forEach(ps => {
+    h += `<tr><th>${ps > 0 ? '+' : ''}${ps * 100}%</th>`;
+    steps.forEach(cs => {
+      const v = feasibility({ ...p, price: p.price * (1 + ps), cost: p.cost * (1 + cs) }).eIrr;
+      h += `<td class="${ps === 0 && cs === 0 ? 'base' : ''}" style="${isFinite(v) ? divergingCell(v - p.hurdle, 0.15) : ''}">${pct(v)}</td>`;
+    });
+    h += '</tr>';
+  });
+  $('#fs-sens').innerHTML = h + '</tbody>';
+  const rows = [
+    ['Gross development value', R.GDV, 'total'],
+    ['Land', -p.land], ['Hard costs', -R.hardT], ['Soft costs', -R.softT], ['Sales & marketing', -R.GDV * p.selling], ['Capitalized interest', -R.intT],
+    ['Total cost', -R.totalCost, 'total'], ['Profit', R.profit, 'total'],
+  ];
+  $('#fs-uses').innerHTML = '<thead><tr><th>Line</th><th>US$</th><th>per m²</th><th>% GDV</th></tr></thead><tbody>' +
+    rows.map(([l, v, c]) => `<tr class="${c || 'sub'}"><td>${l}</td><td>${k(v)}K</td><td>${num(Math.abs(v) / p.area)}</td><td>${pct(Math.abs(v) / R.GDV)}</td></tr>`).join('') + '</tbody>';
+}
+updateFS();
+function downloadFS() {
+  const p = fsState, R = fsLast; if (!R) return;
+  const months = R.cumArr.map((_, i) => 'M' + i);
+  const summaryRows = [
+    [cell('FS-01 · Mirante Residences — Development feasibility', ST_BOLD)],
+    [],
+    [cell('Inputs', ST_BOLD)],
+    ['Land price', cell(p.land, ST_MONEY)],
+    ['Sellable area (m²)', cell(p.area, ST_NUM)],
+    ['Sale price per m²', cell(p.price, ST_MONEY2)],
+    ['Hard cost per m² built', cell(p.cost, ST_MONEY2)],
+    ['Soft costs, % of hard cost', cell(p.soft, ST_PCT)],
+    ['Sales & marketing, % of GDV', cell(p.selling, ST_PCT)],
+    ['Approvals before launch (months)', cell(p.pre, ST_NUM)],
+    ['Construction period (months)', cell(p.build, ST_NUM)],
+    ['Units sold at launch', cell(p.presale, ST_PCT)],
+    ['Sell-out after completion (months)', cell(p.post, ST_NUM)],
+    ['Price paid before handover', cell(p.during, ST_PCT)],
+    ['Loan share of hard costs', cell(p.ltc, ST_PCT)],
+    ['Loan interest rate', cell(p.rate, ST_PCT)],
+    ['Equity hurdle rate', cell(p.hurdle, ST_PCT)],
+    [],
+    [cell('Key results', ST_BOLD)],
+    ['Equity IRR', cell(R.eIrr, ST_PCT)],
+    ['Unlevered IRR', cell(R.uIrr, ST_PCT)],
+    ['Equity multiple', cell(R.em, ST_MULT)],
+    ['NPV to equity at hurdle', cell(R.npvE, ST_MONEY)],
+    ['Profit after financing', cell(R.profit, ST_MONEY)],
+    ['Margin on GDV', cell(R.margin, ST_PCT)],
+    ['Profit on cost', cell(R.poc, ST_PCT)],
+    ['Peak equity', cell(R.peakEq, ST_MONEY)],
+    ['Peak equity reached in month', R.peakM],
+    ['Equity repaid by month', R.payback != null ? R.payback : 'not repaid'],
+    [],
+    [cell('Sources & uses', ST_BOLD)],
+    ['Gross development value', cell(R.GDV, ST_MONEY)],
+    ['Land', cell(-p.land, ST_MONEY)],
+    ['Hard costs', cell(-R.hardT, ST_MONEY)],
+    ['Soft costs', cell(-R.softT, ST_MONEY)],
+    ['Sales & marketing', cell(-R.GDV * p.selling, ST_MONEY)],
+    ['Capitalized interest', cell(-R.intT, ST_MONEY)],
+    ['Total cost', cell(-R.totalCost, ST_BOLDMONEY)],
+    ['Profit', cell(R.profit, ST_BOLDMONEY)],
+  ];
+  const cashRows = [
+    ['', ...months],
+    ['Development costs', ...R.cost.map(v => cell(v, ST_MONEY))],
+    ['Buyer receipts', ...R.rec.map(v => cell(v, ST_MONEY))],
+    ['Net cash flow to equity', ...R.eq.map(v => cell(v, ST_MONEY))],
+    ['Cumulative equity position', ...R.cumArr.map(v => cell(v, ST_BOLDMONEY))],
+  ];
+  const steps = [-0.1, -0.05, 0, 0.05, 0.1];
+  const sensRows = [['Equity IRR · rows = sale price vs base, columns = hard cost vs base']];
+  sensRows.push(['', ...steps.map(s => (s > 0 ? '+' : '') + (s * 100) + '% cost')]);
+  steps.forEach(ps => {
+    const row = [(ps > 0 ? '+' : '') + (ps * 100) + '% price'];
+    steps.forEach(cs => row.push(cell(feasibility({ ...p, price: p.price * (1 + ps), cost: p.cost * (1 + cs) }).eIrr, ST_PCT)));
+    sensRows.push(row);
+  });
+  downloadXlsx('FS-01-Mirante-Residences-feasibility.xlsx', [
+    disclaimerSheet(),
+    { name: 'Summary', rows: summaryRows, colWidths: [34, 16] },
+    { name: 'Monthly cash flow', rows: cashRows, colWidths: [26, ...months.map(() => 11)], freeze: { col: 1, row: 1 } },
+    { name: 'Sensitivity', rows: sensRows, colWidths: [14, 12, 12, 12, 12, 12] },
+  ]);
+}
+$('#fs-download').addEventListener('click', downloadFS);
+
+/* =================== AQ-02 Acquisition =================== */
+const RF = 0.045, BETA = 0.84, ERP = 0.044, UNITS = 24;
+const AQ = [
+  { group: 'aq-a', id: 'price', label: 'Purchase price', min: 3e6, max: 5e6, step: 25000, value: 4e6, fmt: v => money(v) },
+  { group: 'aq-a', id: 'rent', label: 'Average rent per unit / month', min: 1300, max: 2000, step: 10, value: 1650, fmt: v => '$' + num(v) },
+  { group: 'aq-a', id: 'vac', label: 'Vacancy & credit loss', min: 0.03, max: 0.12, step: 0.005, value: 0.06, fmt: v => pct(v) },
+  { group: 'aq-a', id: 'opex', label: 'Operating expenses, % of EGI', min: 0.3, max: 0.5, step: 0.005, value: 0.38, fmt: v => pct(v) },
+  { group: 'aq-a', id: 'rg', label: 'Annual rent growth', min: 0, max: 0.06, step: 0.0025, value: 0.035, fmt: v => pct(v, 2) },
+  { group: 'aq-b', id: 'ltv', label: 'Maximum loan-to-value', min: 0.5, max: 0.8, step: 0.01, value: 0.65, fmt: v => pct(v, 0) },
+  { group: 'aq-b', id: 'rate', label: 'Interest rate (30-yr amortization)', min: 0.045, max: 0.09, step: 0.0025, value: 0.065, fmt: v => pct(v, 2) },
+  { group: 'aq-b', id: 'dscr', label: 'Lender minimum DSCR', min: 1.15, max: 1.5, step: 0.05, value: 1.25, fmt: v => v.toFixed(2) + '×' },
+  { group: 'aq-c', id: 'hold', label: 'Hold period', min: 3, max: 10, step: 1, value: 5, fmt: v => v + ' years' },
+  { group: 'aq-c', id: 'exitCap', label: 'Exit cap rate', min: 0.055, max: 0.09, step: 0.0025, value: 0.075, fmt: v => pct(v, 2) },
+  { group: 'aq-c', id: 'prem', label: 'Property-specific risk premium', min: 0, max: 0.06, step: 0.005, value: 0.03, fmt: v => pct(v) },
+];
+function acquisition(p, priceOverride) {
+  const price = priceOverride ?? p.price, H = p.hold, rows = [];
+  const opex1 = UNITS * p.rent * 12 * (1 - p.vac) * p.opex;
+  for (let t = 1; t <= H + 1; t++) {
+    const gpr = UNITS * p.rent * 12 * Math.pow(1 + p.rg, t - 1), vac = gpr * p.vac, egi = gpr - vac;
+    const opex = opex1 * Math.pow(1.03, t - 1), noi = egi - opex, res = UNITS * 300 * Math.pow(1.03, t - 1);
+    rows.push({ t, gpr, vac, egi, opex, noi, res });
+  }
+  const rm = p.rate / 12, pmt = rm / (1 - Math.pow(1 + rm, -360)), konst = pmt * 12;
+  const loanLTV = p.ltv * price, loanDSCR = rows[0].noi / (p.dscr * konst), loan = Math.min(loanLTV, loanDSCR);
+  const ds = loan * konst, bal = yrs => { const n = yrs * 12; return loan * Math.pow(1 + rm, n) - pmt * loan * (Math.pow(1 + rm, n) - 1) / rm; };
+  const closing = price * 0.025, equity = price + closing + loan * 0.01 - loan;
+  const lev = [-equity], unl = [-(price + closing)];
+  for (let t = 1; t <= H; t++) { const cf = rows[t - 1].noi - rows[t - 1].res; lev.push(cf - ds); unl.push(cf); }
+  const exit = rows[H].noi / p.exitCap, saleNet = exit * 0.98, netSale = saleNet - bal(H);
+  lev[H] += netSale; unl[H] += saleNet;
+  const hurdle = RF + BETA * ERP + p.prem;
+  return {
+    price, rows, loan, loanLTV, loanDSCR, binds: loanLTV <= loanDSCR ? 'loan-to-value' : 'DSCR', ds, equity, lev, unl, exit, netSale, payoff: bal(H),
+    capIn: rows[0].noi / price, levIrr: irr(lev), unlIrr: irr(unl), em: lev.slice(1).reduce((a, b) => a + b, 0) / equity,
+    coc: (rows[0].noi - rows[0].res - ds) / equity, minDscr: Math.min(...rows.slice(0, H).map(r => r.noi / ds)), npv: npv(hurdle, lev), hurdle,
+  };
+}
+function maxBid(p) {
+  // Solve by NPV at the hurdle rate, not by IRR: at a very low price, equity shrinks
+  // and the IRR can run past irr()'s -90%..+150% search range and come back NaN, which
+  // used to make a clearing price look like "no price clears the hurdle".
+  const hurdle = RF + BETA * ERP + p.prem;
+  const g = x => npv(hurdle, acquisition(p, x).lev);
+  let lo = 1e5, hi = 5e7;
+  if (g(lo) <= 0) return NaN;              // doesn't clear even at the lowest price searched
+  if (g(hi) >= 0) return Math.floor(hi / 5000) * 5000; // still clears at the top of the range
+  for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (g(mid) > 0) lo = mid; else hi = mid; }
+  return Math.floor(lo / 5000) * 5000;
+}
+let aqLast, aqBid;
+const aqState = buildInputs('aq', AQ, updateAQ);
+function updateAQ() {
+  const p = aqState, R = acquisition(p), bid = maxBid(p), ok = R.levIrr >= R.hurdle;
+  aqLast = R; aqBid = bid;
+  kpis($('#aq-kpis'), [
+    { label: 'Levered IRR', value: pct(R.levIrr), note: `Required return ${pct(R.hurdle)}`, tone: ok ? 'good' : 'bad' },
+    { label: 'Maximum bid', value: money(bid), note: isFinite(bid) ? `${bid >= p.price ? '+' : '−'}${money(Math.abs(bid - p.price))} vs ${money(p.price)} ask` : 'No price clears the hurdle' },
+    { label: 'Equity multiple', value: R.em.toFixed(2) + '×', note: `Equity in ${money(R.equity)}` },
+    { label: 'Going-in cap rate', value: pct(R.capIn, 2), note: `Exit at ${pct(p.exitCap, 2)}` },
+    { label: 'Unlevered IRR', value: pct(R.unlIrr), note: 'Before debt' },
+    { label: 'Year-1 cash-on-cash', value: pct(R.coc), note: 'After debt service and reserves' },
+    { label: 'Minimum DSCR', value: R.minDscr.toFixed(2) + '×', note: `Lender floor ${p.dscr.toFixed(2)}×`, tone: R.minDscr >= p.dscr ? 'good' : 'bad' },
+    { label: 'Loan amount', value: money(R.loan), note: `${pct(R.loan / R.price, 0)} LTV, sized by ${R.binds}` },
+  ]);
+  $('#aq-verdict').innerHTML = `<span class="pill ${ok ? 'good' : 'warning'}"><i></i>${ok ? 'Bid at ask' : 'Bid below ask'}</span><span>` + (ok
+    ? `At ${money(p.price)} the levered IRR of ${pct(R.levIrr)} clears the ${pct(R.hurdle)} required return. The investor could pay up to ${money(bid)}.`
+    : `At the ${money(p.price)} ask, levered IRR is ${pct(R.levIrr)}, below the ${pct(R.hurdle)} required return. ${isFinite(bid) ? `The numbers support a bid of up to ${money(bid)}.` : 'No price in range clears it.'}`) +
+    ` <span style="color:var(--muted)">Required return = ${pct(RF, 2)} risk-free + ${BETA} β × ${pct(ERP, 2)} ERP + ${pct(p.prem)} property premium.</span></span>`;
+  const H = p.hold, labels = R.lev.map((_, i) => 'Yr ' + i);
+  const op = R.lev.map((_, i) => (i === 0 ? 0 : R.rows[i - 1].noi - R.rows[i - 1].res - R.ds));
+  chart($('#aq-chart'), {
+    labels, height: 240, allX: true, aria: 'Annual cash flow to equity',
+    series: [
+      { name: 'Equity invested', type: 'bar', values: R.lev.map((_, i) => (i === 0 ? -R.equity : 0)), color: 'var(--s2)' },
+      { name: 'Cash flow after debt', type: 'bar', values: op, color: 'var(--s1)' },
+      { name: 'Net sale proceeds', type: 'bar', values: R.lev.map((_, i) => (i === H ? R.netSale : 0)), color: 'var(--s3)' },
+    ],
+    barLabels: [{ i: 0, value: -R.equity, text: money(-R.equity) }, { i: H, value: R.netSale + op[H], text: money(R.netSale + op[H]) }],
+    tipTitle: i => (i === 0 ? 'Year 0 · closing' : `Year ${i}${i === H ? ' · sale' : ''}`),
+  });
+  $('#aq-debt-note').textContent = `Loan ${money(R.loan)}: LTV allows ${money(R.loanLTV)}, DSCR allows ${money(R.loanDSCR)}`;
+  const yrs = R.rows.slice(0, H);
+  const line = (l, f, cls = 'sub') => `<tr class="${cls}"><td>${l}</td>${yrs.map(r => `<td>${f(r)}</td>`).join('')}</tr>`;
+  $('#aq-table').innerHTML = `<thead><tr><th>US$ thousands</th>${yrs.map(r => `<th>Yr ${r.t}</th>`).join('')}</tr></thead><tbody>` +
+    line('Gross potential rent', r => k(r.gpr)) + line('Vacancy & credit loss', r => k(-r.vac)) + line('Effective gross income', r => k(r.egi), 'total') +
+    line('Operating expenses', r => k(-r.opex)) + line('Net operating income', r => k(r.noi), 'total') + line('Capital reserves', r => k(-r.res)) +
+    line('Debt service', () => k(-R.ds)) + line('Cash flow after debt', r => k(r.noi - r.res - R.ds), 'total') + line('DSCR', r => (r.noi / R.ds).toFixed(2) + '×') +
+    `</tbody>`;
+}
+updateAQ();
+function downloadAQ() {
+  const p = aqState, R = aqLast; if (!R) return;
+  const summaryRows = [
+    [cell('AQ-02 · Linden Court — Acquisition underwriting', ST_BOLD)],
+    [],
+    [cell('Inputs', ST_BOLD)],
+    ['Purchase price', cell(p.price, ST_MONEY)],
+    ['Average rent per unit / month', cell(p.rent, ST_MONEY2)],
+    ['Vacancy & credit loss', cell(p.vac, ST_PCT)],
+    ['Operating expenses, % of EGI', cell(p.opex, ST_PCT)],
+    ['Annual rent growth', cell(p.rg, ST_PCT)],
+    ['Maximum loan-to-value', cell(p.ltv, ST_PCT)],
+    ['Interest rate (30-yr amortization)', cell(p.rate, ST_PCT)],
+    ['Lender minimum DSCR', cell(p.dscr, ST_MULT)],
+    ['Hold period (years)', cell(p.hold, ST_NUM)],
+    ['Exit cap rate', cell(p.exitCap, ST_PCT)],
+    ['Property-specific risk premium', cell(p.prem, ST_PCT)],
+    [],
+    [cell('Key results', ST_BOLD)],
+    ['Levered IRR', cell(R.levIrr, ST_PCT)],
+    ['Required return (hurdle)', cell(R.hurdle, ST_PCT)],
+    ['Unlevered IRR', cell(R.unlIrr, ST_PCT)],
+    ['Maximum bid', isFinite(aqBid) ? cell(aqBid, ST_MONEY) : 'No price clears the hurdle'],
+    ['Equity multiple', cell(R.em, ST_MULT)],
+    ['Going-in cap rate', cell(R.capIn, ST_PCT)],
+    ['Year-1 cash-on-cash', cell(R.coc, ST_PCT)],
+    ['Minimum DSCR', cell(R.minDscr, ST_MULT)],
+    ['Loan amount', cell(R.loan, ST_MONEY)],
+    ['Loan sized by', R.binds],
+    ['Equity invested', cell(R.equity, ST_MONEY)],
+  ];
+  const yrs = R.rows.slice(0, p.hold);
+  const years = yrs.map(r => 'Yr ' + r.t);
+  const proforma = [
+    ['US$', ...years],
+    ['Gross potential rent', ...yrs.map(r => cell(r.gpr, ST_MONEY))],
+    ['Vacancy & credit loss', ...yrs.map(r => cell(-r.vac, ST_MONEY))],
+    ['Effective gross income', ...yrs.map(r => cell(r.egi, ST_BOLDMONEY))],
+    ['Operating expenses', ...yrs.map(r => cell(-r.opex, ST_MONEY))],
+    ['Net operating income', ...yrs.map(r => cell(r.noi, ST_BOLDMONEY))],
+    ['Capital reserves', ...yrs.map(r => cell(-r.res, ST_MONEY))],
+    ['Debt service', ...yrs.map(() => cell(-R.ds, ST_MONEY))],
+    ['Cash flow after debt', ...yrs.map(r => cell(r.noi - r.res - R.ds, ST_BOLDMONEY))],
+    ['DSCR', ...yrs.map(r => cell(r.noi / R.ds, ST_MULT))],
+  ];
+  const cashFlow = [
+    ['Year', ...R.lev.map((_, i) => 'Yr ' + i)],
+    ['Cash flow to equity (levered)', ...R.lev.map(v => cell(v, ST_MONEY))],
+    ['Cash flow before debt (unlevered)', ...R.unl.map(v => cell(v, ST_MONEY))],
+  ];
+  downloadXlsx('AQ-02-Linden-Court-acquisition.xlsx', [
+    disclaimerSheet(),
+    { name: 'Summary', rows: summaryRows, colWidths: [34, 16] },
+    { name: 'Operating pro forma', rows: proforma, colWidths: [24, ...years.map(() => 12)], freeze: { col: 1, row: 1 } },
+    { name: 'Cash flow to equity', rows: cashFlow, colWidths: [28, ...R.lev.map(() => 12)], freeze: { col: 1, row: 1 } },
+  ]);
+}
+$('#aq-download').addEventListener('click', downloadAQ);
+
+/* =================== VA-03 3-statement & DCF =================== */
+const VA = [
+  { group: 'va-a', id: 'g', label: 'Revenue growth, 2026–2030', min: 0, max: 0.15, step: 0.005, value: 0.07, fmt: v => pct(v) },
+  { group: 'va-a', id: 'gm', label: 'Gross margin', min: 0.24, max: 0.38, step: 0.005, value: 0.31, fmt: v => pct(v) },
+  { group: 'va-a', id: 'sga', label: 'SG&A, % of revenue', min: 0.1, max: 0.2, step: 0.005, value: 0.15, fmt: v => pct(v) },
+  { group: 'va-a', id: 'capex', label: 'Capex, % of revenue', min: 0.02, max: 0.08, step: 0.0025, value: 0.045, fmt: v => pct(v, 2) },
+  { group: 'va-b', id: 'dso', label: 'Receivable days (DSO)', min: 30, max: 75, step: 1, value: 48, fmt: v => v + ' days' },
+  { group: 'va-b', id: 'dio', label: 'Inventory days (DIO)', min: 30, max: 90, step: 1, value: 55, fmt: v => v + ' days' },
+  { group: 'va-b', id: 'dpo', label: 'Payable days (DPO)', min: 20, max: 70, step: 1, value: 40, fmt: v => v + ' days' },
+  { group: 'va-c', id: 'wacc', label: 'WACC', min: 0.07, max: 0.14, step: 0.0025, value: 0.1, fmt: v => pct(v, 2) },
+  { group: 'va-c', id: 'tg', label: 'Terminal growth', min: 0, max: 0.04, step: 0.0025, value: 0.025, fmt: v => pct(v, 2) },
+];
+const TAX = 0.25, DA = 0.03, KD = 0.07, REPAY = 1.5e6;
+function threeStatement(p, wacc = p.wacc, tg = p.tg) {
+  const base = { year: '2025A', rev: 42e6, gm: 0.31, sga: 0.15 };
+  const y0 = { year: base.year, rev: base.rev, cogs: base.rev * (1 - base.gm), sgaV: base.rev * base.sga };
+  y0.gp = y0.rev - y0.cogs; y0.ebitda = y0.gp - y0.sgaV; y0.da = y0.rev * DA; y0.ebit = y0.ebitda - y0.da; y0.int = 13.5e6 * KD;
+  y0.ebt = y0.ebit - y0.int; y0.tax = y0.ebt * TAX; y0.ni = y0.ebt - y0.tax;
+  y0.cash = 3e6; y0.ar = y0.rev * 48 / 365; y0.inv = y0.cogs * 55 / 365; y0.ppe = 14e6; y0.ap = y0.cogs * 40 / 365; y0.debt = 12e6;
+  y0.ta = y0.cash + y0.ar + y0.inv + y0.ppe; y0.eq = y0.ta - y0.ap - y0.debt; y0.nwc = y0.ar + y0.inv - y0.ap; y0.check = 0;
+  const Y = [y0];
+  for (let t = 1; t <= 5; t++) {
+    const pr = Y[t - 1], y = { year: (2025 + t) + 'E' };
+    y.rev = pr.rev * (1 + p.g); y.growth = p.g; y.cogs = y.rev * (1 - p.gm); y.gp = y.rev - y.cogs; y.sgaV = y.rev * p.sga;
+    y.ebitda = y.gp - y.sgaV; y.da = y.rev * DA; y.ebit = y.ebitda - y.da; y.int = pr.debt * KD; y.ebt = y.ebit - y.int;
+    y.tax = Math.max(0, y.ebt * TAX); y.ni = y.ebt - y.tax;
+    y.ar = y.rev * p.dso / 365; y.inv = y.cogs * p.dio / 365; y.ap = y.cogs * p.dpo / 365; y.nwc = y.ar + y.inv - y.ap; y.dnwc = y.nwc - pr.nwc;
+    y.capexV = y.rev * p.capex; y.ppe = pr.ppe + y.capexV - y.da; y.repay = Math.min(REPAY, pr.debt); y.debt = pr.debt - y.repay;
+    y.cfo = y.ni + y.da - y.dnwc; y.cfi = -y.capexV; y.cff = -y.repay; y.dcash = y.cfo + y.cfi + y.cff; y.cash = pr.cash + y.dcash;
+    y.eq = pr.eq + y.ni; y.ta = y.cash + y.ar + y.inv + y.ppe; y.check = y.ta - (y.ap + y.debt + y.eq);
+    y.nopat = y.ebit * (1 - TAX); y.fcf = y.nopat + y.da - y.capexV - y.dnwc; y.df = 1 / Math.pow(1 + wacc, t); y.pv = y.fcf * y.df;
+    Y.push(y);
+  }
+  const last = Y[5], pvF = Y.slice(1).reduce((a, y) => a + y.pv, 0);
+  const tv = wacc > tg ? last.fcf * (1 + tg) / (wacc - tg) : NaN, pvTV = tv * last.df, ev = pvF + pvTV, netDebt = y0.debt - y0.cash;
+  return { Y, pvF, tv, pvTV, ev, netDebt, eqv: ev - netDebt, multiple: ev / y0.ebitda, fwd: ev / Y[1].ebitda, tvShare: pvTV / ev, maxCheck: Math.max(...Y.map(y => Math.abs(y.check))) };
+}
+let vaLast;
+const vaState = buildInputs('va', VA, updateVA);
+let vaTab = 'is';
+document.querySelectorAll('#va-tabs button').forEach(b => b.addEventListener('click', () => {
+  vaTab = b.dataset.tab;
+  document.querySelectorAll('#va-tabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+  updateVA();
+}));
+// Balancing (debits = credits) is not the same question as solvency (can the business
+// pay its bills); a balance sheet can balance in a year where cash is negative, because
+// this model has no revolver or extra equity call to plug that hole. Surface that case
+// instead of only reporting the accounting check.
+function vaDeficitNote(Y) {
+  const d = Y.slice(1).find(y => y.cash < 0);
+  return d ? `Cash goes negative in ${d.year} — model has no credit line to cover it` : null;
+}
+function updateVA() {
+  const p = vaState, R = threeStatement(p), Y = R.Y;
+  vaLast = R;
+  const deficitNote = vaDeficitNote(Y);
+  let balanceNote, balanceTone;
+  if (R.maxCheck >= 1) { balanceNote = 'Balance check failed'; balanceTone = 'bad'; }
+  else if (deficitNote) { balanceNote = deficitNote; balanceTone = 'bad'; }
+  else { balanceNote = '✓ Balance sheet balances every year'; balanceTone = 'good'; }
+  kpis($('#va-kpis'), [
+    { label: 'Enterprise value', value: money(R.ev, 1), note: `PV of FCF ${money(R.pvF, 1)} + PV of TV ${money(R.pvTV, 1)}` },
+    { label: 'Equity value', value: money(R.eqv, 1), note: `After ${money(R.netDebt, 1)} net debt` },
+    { label: 'EV / EBITDA', value: R.multiple.toFixed(1) + '×', note: `2025A · ${R.fwd.toFixed(1)}× on 2026E` },
+    { label: 'Terminal value share', value: pct(R.tvShare, 0), note: balanceNote, tone: balanceTone },
+  ]);
+  const fc = Y.slice(1);
+  const labels = [...fc.map(y => 'PV ' + y.year), 'PV of TV', 'EV', 'Net debt', 'Equity'];
+  const vis = [...fc.map(y => y.pv), R.pvTV, R.ev, R.netDebt, R.eqv];
+  let run = 0; const baseV = [];
+  fc.forEach(y => { baseV.push(run); run += y.pv; }); baseV.push(run); baseV.push(0); baseV.push(R.eqv); baseV.push(0);
+  const col = i => (i <= 5 ? 0 : i === 7 ? 1 : 2);
+  chart($('#va-bridge'), {
+    labels, height: 240, allX: true, xLabelWidth: 1, aria: 'Bridge from present value of free cash flow to equity value',
+    legend: [{ name: 'Value added', color: 'var(--s1)' }, { name: 'Net debt', color: 'var(--s2)' }, { name: 'Total', color: 'var(--s3)' }],
+    series: [
+      { name: 'base', type: 'bar', values: baseV, color: 'none', hideTip: true },
+      { name: 'Value added', type: 'bar', values: vis.map((v, i) => (col(i) === 0 ? v : 0)), color: 'var(--s1)' },
+      { name: 'Net debt', type: 'bar', values: vis.map((v, i) => (col(i) === 1 ? v : 0)), color: 'var(--s2)' },
+      { name: 'Total', type: 'bar', values: vis.map((v, i) => (col(i) === 2 ? v : 0)), color: 'var(--s3)' },
+    ],
+    barLabels: [{ i: 5, value: R.ev, text: money(R.pvTV, 1) }, { i: 6, value: R.ev, text: money(R.ev, 1) }, { i: 8, value: R.eqv, text: money(R.eqv, 1) }],
+    tipTitle: i => labels[i],
+  });
+  const all = Y, row = (l, f, cls = 'sub', from = 0) => `<tr class="${cls}"><td>${l}</td>${all.map((y, i) => `<td>${i < from ? '' : f(y)}</td>`).join('')}</tr>`;
+  const head = `<thead><tr><th>US$ thousands</th>${all.map(y => `<th>${y.year}</th>`).join('')}</tr></thead><tbody>`;
+  let body = '';
+  if (vaTab === 'is') body = row('Revenue', y => k(y.rev), 'total') + row('Growth', y => pct(y.growth), 'sub', 1) + row('Cost of goods sold', y => k(-y.cogs)) +
+    row('Gross profit', y => k(y.gp), 'total') + row('SG&A', y => k(-y.sgaV)) + row('EBITDA', y => k(y.ebitda), 'total') + row('EBITDA margin', y => pct(y.ebitda / y.rev)) +
+    row('Depreciation & amortization', y => k(-y.da)) + row('EBIT', y => k(y.ebit), 'total') + row('Interest expense', y => k(-y.int)) + row('Income taxes', y => k(-y.tax)) + row('Net income', y => k(y.ni), 'total');
+  if (vaTab === 'bs') body = row('Cash', y => k(y.cash)) + row('Accounts receivable', y => k(y.ar)) + row('Inventory', y => k(y.inv)) + row('PP&E, net', y => k(y.ppe)) +
+    row('Total assets', y => k(y.ta), 'total') + row('Accounts payable', y => k(y.ap)) + row('Debt', y => k(y.debt)) + row('Shareholders’ equity', y => k(y.eq)) +
+    row('Total liabilities & equity', y => k(y.ap + y.debt + y.eq), 'total') + row('Balance check', y => `<span class="check-ok">${Math.abs(y.check) < 1 ? '0 ✓' : k(y.check)}</span>`);
+  if (vaTab === 'cf') body = row('Net income', y => k(y.ni), 'sub', 1) + row('Depreciation & amortization', y => k(y.da), 'sub', 1) + row('Change in working capital', y => k(-y.dnwc), 'sub', 1) +
+    row('Cash from operations', y => k(y.cfo), 'total', 1) + row('Capital expenditures', y => k(-y.capexV), 'sub', 1) + row('Debt repayment', y => k(-y.repay), 'sub', 1) +
+    row('Net change in cash', y => k(y.dcash), 'total', 1) + row('Ending cash', y => k(y.cash), 'sub');
+  if (vaTab === 'dcf') body = row('EBIT', y => k(y.ebit), 'sub', 1) + row('Taxes on EBIT (25%)', y => k(-y.ebit * TAX), 'sub', 1) + row('D&A', y => k(y.da), 'sub', 1) +
+    row('Capex', y => k(-y.capexV), 'sub', 1) + row('Change in working capital', y => k(-y.dnwc), 'sub', 1) + row('Unlevered free cash flow', y => k(y.fcf), 'total', 1) +
+    row('Discount factor', y => y.df.toFixed(3), 'sub', 1) + row('Present value', y => k(y.pv), 'total', 1);
+  $('#va-table').innerHTML = head + body + '</tbody>';
+  const ws = [-0.01, -0.005, 0, 0.005, 0.01], gs = [-0.01, -0.005, 0, 0.005, 0.01];
+  let h = '<thead><tr><th></th>' + gs.map(d => `<th>${pct(p.tg + d, 1)}</th>`).join('') + '</tr></thead><tbody>';
+  ws.forEach(dw => {
+    h += `<tr><th>${pct(p.wacc + dw, 1)}</th>`;
+    gs.forEach(dg => {
+      const w = p.wacc + dw, g = p.tg + dg, v = w > g + 0.005 ? threeStatement(p, w, g).eqv : NaN;
+      h += `<td class="${dw === 0 && dg === 0 ? 'base' : ''}" style="background:var(--paper)">${isFinite(v) ? '$' + (v / 1e6).toFixed(1) : 'n/a'}</td>`;
+    });
+    h += '</tr>';
+  });
+  $('#va-sens').innerHTML = h + '</tbody>';
+}
+updateVA();
+function downloadVA() {
+  const p = vaState, R = vaLast; if (!R) return;
+  const Y = R.Y;
+  const summaryRows = [
+    [cell('VA-03 · Northfield Packaging — 3-statement model & DCF', ST_BOLD)],
+    [],
+    [cell('Inputs', ST_BOLD)],
+    ['Revenue growth, 2026-2030', cell(p.g, ST_PCT)],
+    ['Gross margin', cell(p.gm, ST_PCT)],
+    ['SG&A, % of revenue', cell(p.sga, ST_PCT)],
+    ['Capex, % of revenue', cell(p.capex, ST_PCT)],
+    ['Receivable days (DSO)', cell(p.dso, ST_NUM)],
+    ['Inventory days (DIO)', cell(p.dio, ST_NUM)],
+    ['Payable days (DPO)', cell(p.dpo, ST_NUM)],
+    ['WACC', cell(p.wacc, ST_PCT)],
+    ['Terminal growth', cell(p.tg, ST_PCT)],
+    [],
+    [cell('Key results', ST_BOLD)],
+    ['Enterprise value', cell(R.ev, ST_MONEY)],
+    ['Equity value', cell(R.eqv, ST_MONEY)],
+    ['EV / EBITDA (2025A)', cell(R.multiple, ST_MULT)],
+    ['EV / EBITDA (2026E)', cell(R.fwd, ST_MULT)],
+    ['Terminal value, % of EV', cell(R.tvShare, ST_PCT)],
+    ['Net debt', cell(R.netDebt, ST_MONEY)],
+    ['Balance sheet check (max abs)', R.maxCheck],
+    ['Cash flow note', vaDeficitNote(Y) || 'Cash stays positive in every projected year'],
+  ];
+  const row = (label, f, style = ST_MONEY) => [label, ...Y.map(y => cell(f(y), style))];
+  const isRows = [
+    ['US$', ...Y.map(y => y.year)],
+    row('Revenue', y => y.rev, ST_BOLDMONEY), row('Cost of goods sold', y => -y.cogs),
+    row('Gross profit', y => y.gp, ST_BOLDMONEY), row('SG&A', y => -y.sgaV),
+    row('EBITDA', y => y.ebitda, ST_BOLDMONEY), row('Depreciation & amortization', y => -y.da),
+    row('EBIT', y => y.ebit, ST_BOLDMONEY), row('Interest expense', y => -y.int),
+    row('Income taxes', y => -y.tax), row('Net income', y => y.ni, ST_BOLDMONEY),
+  ];
+  const bsRows = [
+    ['US$', ...Y.map(y => y.year)],
+    row('Cash', y => y.cash), row('Accounts receivable', y => y.ar), row('Inventory', y => y.inv), row('PP&E, net', y => y.ppe),
+    row('Total assets', y => y.ta, ST_BOLDMONEY), row('Accounts payable', y => y.ap), row('Debt', y => y.debt),
+    row('Shareholders’ equity', y => y.eq), row('Total liabilities & equity', y => y.ap + y.debt + y.eq, ST_BOLDMONEY),
+    row('Balance check', y => y.check, ST_DEC2),
+  ];
+  const cfRows = [
+    ['US$', ...Y.map(y => y.year)],
+    row('Net income', y => y.ni), row('Depreciation & amortization', y => y.da), row('Change in working capital', y => -y.dnwc),
+    row('Cash from operations', y => y.cfo, ST_BOLDMONEY), row('Capital expenditures', y => -y.capexV), row('Debt repayment', y => -y.repay),
+    row('Net change in cash', y => y.dcash, ST_BOLDMONEY), row('Ending cash', y => y.cash),
+  ];
+  const dcfRows = [
+    ['US$', ...Y.map(y => y.year)],
+    row('EBIT', y => y.ebit), row('Taxes on EBIT (25%)', y => -y.ebit * TAX), row('D&A', y => y.da),
+    row('Capex', y => -y.capexV), row('Change in working capital', y => -y.dnwc),
+    row('Unlevered free cash flow', y => y.fcf, ST_BOLDMONEY), row('Discount factor', y => y.df, ST_DEC2),
+    row('Present value', y => y.pv, ST_BOLDMONEY),
+  ];
+  const ws = [-0.01, -0.005, 0, 0.005, 0.01], gs = [-0.01, -0.005, 0, 0.005, 0.01];
+  const sensRows = [['Equity value (US$M) · rows = WACC, columns = terminal growth']];
+  sensRows.push(['', ...gs.map(dg => cell(p.tg + dg, ST_PCT))]);
+  ws.forEach(dw => {
+    const rowArr = [cell(p.wacc + dw, ST_PCT)];
+    gs.forEach(dg => {
+      const w = p.wacc + dw, g = p.tg + dg;
+      const v = w > g + 0.005 ? threeStatement(p, w, g).eqv / 1e6 : null;
+      rowArr.push(v != null ? cell(v, ST_DEC2) : 'n/a');
+    });
+    sensRows.push(rowArr);
+  });
+  downloadXlsx('VA-03-Northfield-Packaging-valuation.xlsx', [
+    disclaimerSheet(),
+    { name: 'Summary', rows: summaryRows, colWidths: [34, 16] },
+    { name: 'Income statement', rows: isRows, colWidths: [28, ...Y.map(() => 11)], freeze: { col: 1, row: 1 } },
+    { name: 'Balance sheet', rows: bsRows, colWidths: [28, ...Y.map(() => 11)], freeze: { col: 1, row: 1 } },
+    { name: 'Cash flow', rows: cfRows, colWidths: [28, ...Y.map(() => 11)], freeze: { col: 1, row: 1 } },
+    { name: 'DCF', rows: dcfRows, colWidths: [28, ...Y.map(() => 11)], freeze: { col: 1, row: 1 } },
+    { name: 'Sensitivity', rows: sensRows, colWidths: [14, 12, 12, 12, 12, 12] },
+  ]);
+}
+$('#va-download').addEventListener('click', downloadVA);
+
+/* =================== PY-04 Python output =================== */
+const D = JSON.parse($('#py-data').textContent);
+const W = D.weeks;
+const minPre = W.reduce((a, w, i) => (w['Cash before revolver'] < a.v ? { v: w['Cash before revolver'], i } : a), { v: Infinity, i: 0 });
+const peakRev = W.reduce((a, w, i) => (w['Revolver balance'] > a.v ? { v: w['Revolver balance'], i } : a), { v: -1, i: 0 });
+const fmtDate = s => new Date(s + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+$('#py-log').innerHTML = `<span>$ python cash_forecast_13w.py</span><span>as of ${fmtDate(D.as_of)}, 2026</span><span>${D.rows_processed.ar_open} open invoices</span><span>${D.rows_processed.ap_open} open bills</span><span>${num(D.rows_processed.history)} historical payments</span>`;
+kpis($('#py-kpis'), [
+  { label: 'Opening cash', value: money(D.opening_cash), note: `Minimum policy ${money(D.min_cash)}` },
+  { label: 'Lowest cash before revolver', value: money(minPre.v), note: `Week ${minPre.i + 1} · ${fmtDate(W[minPre.i].week_start)}`, tone: minPre.v < D.min_cash ? 'bad' : 'good' },
+  { label: 'Peak revolver balance', value: money(peakRev.v), note: `Week ${peakRev.i + 1} · ${pct(peakRev.v / D.revolver_limit, 0)} of ${money(D.revolver_limit, 1)} line` },
+  { label: 'Liquidity at week 13', value: money(W[12]['Liquidity headroom']), note: 'Cash plus undrawn revolver' },
+]);
+chart($('#py-chart'), {
+  labels: W.map((w, i) => 'W' + (i + 1)), height: 250, allX: true, aria: 'Weekly cash before revolver and revolver balance',
+  series: [
+    { name: 'Revolver balance', type: 'bar', values: W.map(w => w['Revolver balance']), color: 'var(--s2)' },
+    { name: 'Cash before revolver', type: 'line', values: W.map(w => w['Cash before revolver']), color: 'var(--s1)' },
+  ],
+  refs: [{ value: D.min_cash, label: 'Minimum cash ' + money(D.min_cash) }],
+  marks: [{ i: minPre.i, value: minPre.v, label: money(minPre.v), below: true, color: 'var(--s1)' }],
+  tipTitle: i => `Week ${i + 1} · ${fmtDate(W[i].week_start)}`,
+  tipExtra: i => `<div><span>Closing cash</span><span>${money(W[i]['Closing cash'])}</span></div>`,
+});
+const lvl = { warning: 'Warning', critical: 'Critical', info: 'Info' };
+$('#py-flags').innerHTML = D.flags.map(f => `<li><span class="pill ${f.level}"><i></i>${lvl[f.level]}</span><span>${f.text}</span></li>`).join('');
+const beh = Object.entries(D.behavior), maxB = Math.max(...beh.map(b => b[1]));
+$('#py-behavior').innerHTML = beh.map(([c, d]) => `<div class="hbar"><span class="name" title="${c}">${c}</span><span class="track"><span class="bar" style="width:${Math.max(1, d / maxB * 82)}%"></span><span class="v">${d} d</span></span></div>`).join('');
+const rowsPy = [
+  ['Opening cash', 'Opening cash', 'sub'], ['Collections - open AR', 'Collections, open AR', 'sub'], ['Collections - new sales', 'Collections, new sales', 'sub'],
+  ['Total receipts', 'Total receipts', 'total'], ['Inventory', 'Inventory purchases', 'sub'], ['Payroll', 'Payroll', 'sub'], ['Rent', 'Rent', 'sub'],
+  ['Operating expenses', 'Operating expenses', 'sub'], ['Debt service', 'Debt service', 'sub'], ['Taxes', 'Taxes', 'sub'],
+  ['Total disbursements', 'Total disbursements', 'total'], ['Operating cash flow', 'Operating cash flow', 'total'], ['Revolver draw / (repay)', 'Revolver draw / (repay)', 'sub'],
+  ['Closing cash', 'Closing cash', 'total'], ['Revolver balance', 'Revolver balance', 'sub'],
+];
+$('#py-table').innerHTML = `<thead><tr><th></th>${W.map((w, i) => `<th>W${i + 1}<br>${fmtDate(w.week_start)}</th>`).join('')}</tr></thead><tbody>` +
+  rowsPy.map(([key, l, c]) => `<tr class="${c}"><td>${l}</td>${W.map(w => `<td>${k(w[key])}</td>`).join('')}</tr>`).join('') + '</tbody>';
+const src = $('#py-src').textContent.replace(/^\n/, '');
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+$('#py-code').innerHTML = esc(src).replace(/("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b(?:def|return|for|in|if|elif|else|import|from|as|with|while|break|not|and|or|None|True|False|raise|lambda)\b)/g,
+  t => `<span class="${t[0] === '#' ? 'c' : /^[f"']/.test(t) && !/^(for|from|False)$/.test(t) ? 's' : 'k'}">${t}</span>`);
+$('#copy-code').addEventListener('click', e => {
+  const b = e.currentTarget;
+  const done = ok => { b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(() => { b.textContent = 'Copy code'; }, 1800); };
+  const fallback = () => { const r = document.createRange(); r.selectNodeContents($('#py-code')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); done(false); };
+  try { navigator.clipboard.writeText(src).then(() => done(true), fallback); } catch (err) { fallback(); }
+});
+const pyXlsxB64 = $('#py-xlsx-b64').textContent.trim();
+$('#py-download').addEventListener('click', () => downloadBase64('PY-04-Harbor-Pine-13-week-cash-flow.xlsx', pyXlsxB64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
+})();
+</script>
+</body>
+</html>
